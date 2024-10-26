@@ -1,167 +1,122 @@
-<script setup>
-import { ref } from "vue";
-//   import MapComponent from './MapComponent.vue';
-
-const event = ref({
-  title: "",
-  description: "",
-  date: "",
-  price: 0,
-  location: "",
-  tags: "",
-  images: [],
-});
-
-const handleFileUpload = (event) => {
-  const files = event.target.files;
-  event.value.images = Array.from(files);
-};
-
-const submitEvent = () => {
-  // Handle event submission logic (e.g., API call)
-  console.log("Event submitted:", event.value);
-};
-</script>
-
 <template>
-  <div class="max-w-2xl mx-auto p-6 bg-gray-200 rounded-lg shadow-md">
-    <h2 class="text-2xl font-semibold mb-4 text-center">Create Event</h2>
-    <form @submit.prevent="submitEvent">
-      <div class="mb-4">
-        <label for="title" class="block text-sm font-medium text-gray-700"
-          >Event Title</label
-        >
+  <form class="font-[sans-serif] text-[#333] max-w-4xl mx-auto px-6 my-6 bg-slate-50">
+    <div class="grid sm:grid-cols-2 gap-10">
+      <!-- Title -->
+      <div class="relative flex items-center sm:col-span-2">
+        <label class="text-[13px] absolute top-[-10px] left-0">Title</label>
         <input
           type="text"
-          id="title"
-          placeholder="please enter a title"
-          v-model="event.title"
-          required
-          class="mt-1 p-2 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-950"
+          placeholder="Enter event title"
+          class="px-2 pt-5 pb-2 bg-white w-full text-sm border-b-2 border-gray-100 focus:border-[#333] outline-none"
         />
       </div>
 
-      <div class="mb-4">
-        <label for="description" class="block text-sm font-medium text-gray-700"
+      <!-- Description -->
+      <div class="relative flex items-center sm:col-span-2">
+        <label class="text-[13px] absolute top-[-10px] left-0"
           >Description</label
         >
-        <label for="description" class="block text-sm font-medium text-gray-500"
-          >when you write the description make it specfic</label
-        >
         <textarea
-          id="description"
-          v-model="event.description"
-          required
-          class="mt-1 p-2 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+          placeholder="Enter event description"
           rows="4"
+          class="px-2 pt-5 pb-2 bg-white w-full text-sm border-b-2 border-gray-100 focus:border-[#333] outline-none"
         ></textarea>
       </div>
 
-      <div class="mb-4 flex flex-col md:flex-row gap-4">
-        <!-- Event Date Input -->
-        <div class="flex-1">
-          <label for="date" class="block text-sm font-medium text-gray-700"
-            >Event Date</label
-          >
-          <input
-            type="date"
-            id="date"
-            v-model="event.date"
-            required
-            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-          />
-        </div>
-
-        <!-- Start Time Input -->
-        <div class="flex-1">
-          <label
-            for="start-time"
-            class="block text-sm font-medium text-gray-700"
-            >Start Time</label
-          >
-          <input
-            type="time"
-            id="start-time"
-            v-model="event.startTime"
-            required
-            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-          />
-        </div>
-
-        <!-- End Time Input -->
-        <div class="flex-1">
-          <label for="end-time" class="block text-sm font-medium text-gray-700"
-            >End Time</label
-          >
-          <input
-            type="time"
-            id="end-time"
-            v-model="event.endTime"
-            required
-            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-          />
-        </div>
+      <!-- Event Date -->
+      <div class="relative flex items-center">
+        <label class="text-[13px] absolute top-[-10px] left-0"
+          >Event Date</label
+        >
+        <input
+          type="date"
+          placeholder="Select event date"
+          class="px-2 pt-5 pb-2 bg-white w-full text-sm border-b-2 border-gray-100 focus:border-[#333] outline-none"
+        />
       </div>
 
-      <div class="mb-4">
-        <label for="price" class="block text-sm font-medium text-gray-700"
-          >Price</label
+      <!-- Start Time -->
+      <div class="relative flex items-center">
+        <label class="text-[13px] absolute top-[-10px] left-0"
+          >Start Time</label
         >
+        <input
+          type="time"
+          placeholder="Select start time"
+          class="px-2 pt-5 pb-2 bg-white w-full text-sm border-b-2 border-gray-100 focus:border-[#333] outline-none"
+        />
+      </div>
+
+      <!-- End Time -->
+      <div class="relative flex items-center">
+        <label class="text-[13px] absolute top-[-10px] left-0">End Time</label>
+        <input
+          type="time"
+          placeholder="Select end time"
+          class="px-2 pt-5 pb-2 bg-white w-full text-sm border-b-2 border-gray-100 focus:border-[#333] outline-none"
+        />
+      </div>
+
+      <!-- Price -->
+      <div class="relative flex items-center">
+        <label class="text-[13px] absolute top-[-10px] left-0">Price</label>
         <input
           type="number"
-          id="price"
-          placeholder="price"
-          v-model="event.price"
-          min="0"
-          required
-          class="mt-1 p-2 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+          placeholder="Enter event price"
+          class="px-2 pt-5 pb-2 bg-white w-full text-sm border-b-2 border-gray-100 focus:border-[#333] outline-none"
         />
       </div>
 
-      <div class="mb-4">
-        <label for="location" class="block text-sm font-medium text-gray-700"
-          >Location</label
-        >
-        <MapComponent v-model="event.location" />
-      </div>
-
-      <div class="mb-4">
-        <label for="tags" class="block text-sm font-medium text-gray-700"
-          >Tags</label
-        >
+      <!-- Location -->
+      <div class="relative flex items-center">
+        <label class="text-[13px] absolute top-[-10px] left-0">Location</label>
         <input
           type="text"
-          id="tags"
-          v-model="event.tags"
-          placeholder="Comma separated tags"
-          class="mt-1 p-2 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+          placeholder="Enter event location"
+          class="px-2 pt-5 pb-2 bg-white w-full text-sm border-b-2 border-gray-100 focus:border-[#333] outline-none"
         />
       </div>
 
-      <div class="mb-4">
-        <label for="images" class="block text-sm font-medium text-gray-700"
-          >Upload Images</label
+      <!-- Tags -->
+      <div class="relative flex items-center sm:col-span-2">
+        <label class="text-[13px] absolute top-[-10px] left-0">Tags</label>
+        <input
+          type="text"
+          placeholder="Enter event tags (comma separated)"
+          class="px-2 pt-5 pb-2 bg-white w-full text-sm border-b-2 border-gray-100 focus:border-[#333] outline-none"
+        />
+      </div>
+
+      <!-- Upload Image -->
+      <div class="font-[sans-serif] max-w-md mx-auto pr-36">
+        <label class="text-base text-gray-500 font-semibold mb-2 block"
+          >Upload file</label
         >
         <input
           type="file"
-          id="images"
-          multiple
-          @change="handleFileUpload"
-          class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+          class="w-full text-gray-400 font-semibold text-sm bg-white border file:cursor-pointer cursor-pointer file:border-0 file:py-3 file:px-4 file:mr-4 file:bg-gray-100 file:hover:bg-gray-200 file:text-gray-500 rounded"
         />
-        <p class="mt-1 text-sm text-gray-500">
-          Select a featured image for the thumbnail.
+        <p class="text-xs text-gray-400 mt-2">
+          PNG, JPG SVG, WEBP, and GIF are Allowed.
         </p>
       </div>
+    </div>
 
-      <div class="flex justify-end">
-        <button
-          type="submit"
-          class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md shadow-sm text-white font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-        >
-          Save Event
-        </button>
-      </div>
-    </form>
-  </div>
+    <div class="flex justify-end mt-6">
+      <button
+        type="submit"
+        class="px-4 py-2 text-white rounded  bg-blue-600 hover:bg-blue-700 focus:outline-none transition"
+      >
+        Create Event
+      </button>
+    </div>
+  </form>
 </template>
+
+<script setup>
+// You can add any necessary logic here, like handling form submission
+</script>
+
+<style scoped>
+/* You can add additional styles if needed */
+</style>

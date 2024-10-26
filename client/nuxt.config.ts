@@ -8,8 +8,13 @@ export default defineNuxtConfig({
     HASURA_ADMIN_SECRET: process.env.HASURA_ADMIN_SECRET,
   },
 
-  modules: ['@nuxtjs/apollo'],
+  modules: ['@nuxtjs/apollo', '@nuxt/icon'],
   devtools: { enabled: true },
+  icon: {
+    serverBundle: {
+      collections: ['uil', 'mdi'] 
+    }
+  },
   css: ["~/assets/css/main.css"],
 
   postcss: {

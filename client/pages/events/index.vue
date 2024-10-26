@@ -1,11 +1,13 @@
 <!-- Events listing page with filters -->
 <script>
-import EventForm from "~/components/EventForm.vue";
+
+import Payment from "~/components/payment.vue";
+
 // import EventForm from '~/components/EventForm.vue';
 </script>
 
 <template>
   <div>
-    <EventForm />
+    <Payment />
   </div>
 </template>

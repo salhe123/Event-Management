@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.11.8",
+    "@nuxt/icon": "^1.5.8",
     "@nuxt/image": "^1.8.1",
     "dotenv": "^16.4.5",
     "graphql": "^15.9.0",
