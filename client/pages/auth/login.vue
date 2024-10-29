@@ -1,9 +1,45 @@
+<script setup>
+import { ref } from 'vue';
+import { useForm, useField } from 'vee-validate';
+import * as yup from 'yup';
+// import { login } from '@/composables/UseAuth'; 
+import { useApolloClient } from '@apollo/client';
+
+const client = useApolloClient();
+
+const { handleSubmit, errors, isSubmitting } = useForm({
+  validationSchema: yup.object({
+    email: yup.string().email('Invalid email format').required('Email is required'),
+    password: yup.string().required('Password is required'),
+  }),
+});
+
+// Using fields for validation
+const { value: email } = useField('email');
+const { value: password } = useField('password');
+
+// Handling login
+const handleLogin = async (values) => {
+  try {
+    const { data } = await login(client, {
+      email: values.email,
+      password: values.password,
+    });
+    // Handle successful login (e.g., save token, redirect)
+    console.log(data.login.token);
+  } catch (err) {
+    console.error('Login error:', err.message);
+  }
+};
+</script>
+
+
 <template>
   <div class="font-[sans-serif]">
     <div class="min-h-screen flex flex-col items-center justify-center">
       <div class="grid md:grid-cols-2 items-center gap-4 max-md:gap-8 max-w-6xl max-md:max-w-lg w-full p-4 m-4 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] rounded-md">
         <div class="md:max-w-md w-full px-4 py-4">
-          <form @submit.prevent="handleLogin">
+          <form @submit.prevent="handleSubmit(handleLogin)">
             <div class="mb-12">
               <h3 class="text-gray-800 text-3xl font-extrabold">Sign in</h3>
               <p class="text-sm mt-4 text-gray-800">
@@ -22,6 +58,7 @@
                   </g>
                 </svg>
               </div>
+              <span class="text-red-600 text-xs">{{ errors.email }}</span> <!-- Error message for email -->
             </div>
 
             <div class="mt-8">
@@ -32,6 +69,7 @@
                   <path d="M64 104C22.127 104 1.367 67.496.504 65.943a4 4 0 0 1 0-3.887C1.367 60.504 22.127 24 64 24s62.633 36.504 63.496 38.057a4 4 0 0 1 0 3.887C126.633 67.496 105.873 104 64 104zM8.707 63.994C13.465 71.205 32.146 96 64 96c31.955 0 50.553-24.775 55.293-31.994C114.535 56.795 95.854 32 64 32 32.045 32 13.447 56.775 8.707 63.994zM64 88c-13.234 0-24-10.766-24-24s10.766-24 24-24 24 10.766 24 24-10.766 24-24 24zm0-40c-8.822 0-16 7.178-16 16s7.178 16 16 16 16-7.178 16-16-7.178-16-16-16z" />
                 </svg>
               </div>
+              <span class="text-red-600 text-xs">{{ errors.password }}</span> <!-- Error message for password -->
             </div>
 
             <div class="flex flex-wrap items-center justify-between gap-4 mt-6">
@@ -45,18 +83,20 @@
             </div>
 
             <div class="mt-12">
-              <button type="submit" class="w-full shadow-xl py-2.5 px-4 text-sm tracking-wide rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none">Sign in</button>
+              <button type="submit" :disabled="isSubmitting" class="w-full shadow-xl py-2.5 px-4 text-sm tracking-wide rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none">
+                Sign in
+              </button>
             </div>
 
             <div class="space-x-6 flex justify-center mt-6">
               <button type="button" class="border-none outline-none">
                 <svg xmlns="http://www.w3.org/2000/svg" width="32px" class="inline" viewBox="0 0 512 512">
-                  <!-- SVG content -->
+                  <!-- Google icon -->
                 </svg>
               </button>
               <button type="button" class="border-none outline-none">
                 <svg xmlns="http://www.w3.org/2000/svg" width="32px" fill="#000" viewBox="0 0 22.773 22.773">
-                  <!-- SVG content -->
+                  <!-- Facebook icon -->
                 </svg>
               </button>
             </div>
@@ -66,47 +106,3 @@
     </div>
   </div>
 </template>
-
-<script setup>
-// import { ref } from 'vue';
-// import { useMutation } from '@apollo/client';
-// import gql from 'graphql-tag';
-
-// const LOGIN_MUTATION = gql`
-//   mutation Login($email: String!, $password: String!) {
-//     login(email: $email, password: $password) {
-//       token
-//       user {
-//         id
-//         email
-//         name
-//       }
-//     }
-//   }
-// `;
-
-// const email = ref('');
-// const password = ref('');
-// const error = ref(null);
-// const { login, error: loginError } = useMutation(LOGIN_MUTATION);
-
-// const handleLogin = async () => {
-//   try {
-//     const { data } = await login({
-//       variables: {
-//         email: email.value,
-//         password: password.value,
-//       },
-//     });
-//     // Handle successful login (e.g., save token, redirect)
-//     console.log(data.login.token);
-//   } catch (err) {
-//     error.value = err.message;
-//     console.error('Login error:', error.value);
-//   }
-// };
-</script>
-
-<style scoped>
-/* Add any scoped styles here */
-</style>

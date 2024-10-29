@@ -1,1 +1,0 @@
-// Handles event creation, update, and deletion

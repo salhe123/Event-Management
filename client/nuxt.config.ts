@@ -3,7 +3,7 @@ import { defineNuxtConfig } from 'nuxt/config';
 export default defineNuxtConfig({
   runtimeConfig: {
     public: {
-      HASURA_GRAPHQL_ENDPOINT: process.env.HASURA_GRAPHQL_ENDPOINT,
+      HASURA_GRAPHQL_ENDPOINT: process.env.HASURA_GRAPHQL_ENDPOINT || 'http://localhost:8080/api',
     },
     HASURA_ADMIN_SECRET: process.env.HASURA_ADMIN_SECRET,
   },
@@ -12,8 +12,8 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   icon: {
     serverBundle: {
-      collections: ['uil', 'mdi'] 
-    }
+      collections: ['uil', 'mdi'],
+    },
   },
   css: ["~/assets/css/main.css"],
 
@@ -25,8 +25,11 @@ export default defineNuxtConfig({
   },
 
   apollo: {
-    defaultClient: {
-      httpEndpoint: 'http://localhost:8080', // Ensure this is correct
+    clients: {
+      default: {
+        httpEndpoint: process.env.HASURA_GRAPHQL_ENDPOINT || 'http://localhost:8080/api',
+     
+      },
     },
   },
 

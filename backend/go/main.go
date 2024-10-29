@@ -1,17 +1,19 @@
 package main
 
 import (
+	handler "event_backend/handlers" // Adjust this import path based on your module name
+	"log"
 	"net/http"
-	"your_project_path/handlers"
-
-	"github.com/go-chi/chi"
 )
 
 func main() {
-	r := chi.NewRouter()
+	http.HandleFunc("/api/signup", handler.SignupHandler)
+	http.HandleFunc("/api/login", handler.LoginHandler)
 
-	r.Post("/signup", handlers.SignUp)
-	r.Post("/login", handlers.Login)
-
-	http.ListenAndServe(":8080", r)
+	// Start the server on port 8080
+	log.Println("Starting server on port 8080...")
+	err := http.ListenAndServe(":8080", nil)
+	if err != nil {
+		log.Fatalf("Could not start server: %s", err)
+	}
 }
