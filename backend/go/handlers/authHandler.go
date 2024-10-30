@@ -1,26 +1,21 @@
-package handler
+package handlers
 
 import (
+	"bytes"
 	"encoding/json"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
 
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/dgrijalva/jwt-go"
+	_ "github.com/lib/pq" // PostgreSQL driver
 	"golang.org/x/crypto/bcrypt"
 )
 
-var jwtSecret = []byte("your_secret_key") // Change this to a secure random string in production
+var jwtSecret = []byte("your_secret_key") // Replace with your actual secret key
 
-// User struct represents a user in the system.
-type User struct {
-	ID        int    `json:"id"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-	Email     string `json:"email"`
-}
-
-// SignupInput struct represents the input for the signup action.
+// SignupInput represents the input for signing up a user
 type SignupInput struct {
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
@@ -28,124 +23,225 @@ type SignupInput struct {
 	Password  string `json:"password"`
 }
 
-// SignupOutput struct represents the output for the signup action.
-type SignupOutput struct {
-	Token string `json:"token"`
-	User  User   `json:"user"`
-}
-
-// LoginInput struct represents the input for the login action.
+// LoginInput represents the input for logging in a user
 type LoginInput struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
-// LoginOutput struct represents the output for the login action.
-type LoginOutput struct {
-	Token string `json:"token"`
-	User  User   `json:"user"`
-}
-
-// In-memory user store
-var users = make(map[string]User)           // Maps email to User struct
-var userPasswords = make(map[string]string) // Maps email to hashed password
-var userIDCounter = 1
-
-// HashPassword hashes the user's password using bcrypt.
-func HashPassword(password string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	return string(bytes), err
-}
-
-// CheckPasswordHash checks if the provided password matches the hashed password.
-func CheckPasswordHash(password, hash string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
-	return err == nil
-}
-
-// CreateToken generates a JWT token.
-func CreateToken(user User) (string, error) {
+// generateJWT creates a JWT token for the authenticated user
+func generateJWT(userID string) (string, error) {
 	claims := jwt.MapClaims{
-		"id":         user.ID,
-		"first_name": user.FirstName,
-		"last_name":  user.LastName,
-		"email":      user.Email,
-		"exp":        time.Now().Add(time.Hour * 72).Unix(), // Token expires in 72 hours
+		"sub": userID,
+		"exp": time.Now().Add(time.Hour * 72).Unix(),
+		"https://hasura.io/jwt/claims": map[string]interface{}{
+			"x-hasura-user-id":       userID,
+			"x-hasura-default-role":  "user",
+			"x-hasura-allowed-roles": []string{"user"},
+		},
 	}
+
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(jwtSecret)
+	tokenString, err := token.SignedString(jwtSecret) // Use the jwtSecret defined earlier
+	if err != nil {
+		return "", err
+	}
+	return tokenString, nil
 }
 
-// Signup handler
+// SignupHandler handles user signup
 func SignupHandler(w http.ResponseWriter, r *http.Request) {
 	var input SignupInput
+
+	// Decode the request body
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		http.Error(w, "Invalid input", http.StatusBadRequest)
 		return
 	}
-	log.Printf("Received signup input: %+v\n", input)
-	// Hash password
-	hashedPassword, err := HashPassword(input.Password)
+
+	// Hash the password
+	hashedPassword, err := hashPassword(input.Password)
 	if err != nil {
-		http.Error(w, "Error hashing password", http.StatusInternalServerError)
+		http.Error(w, "Failed to hash password", http.StatusInternalServerError)
 		return
 	}
 
-	// Create user
-	user := User{
-		ID:        userIDCounter,
-		FirstName: input.FirstName,
-		LastName:  input.LastName,
-		Email:     input.Email,
+	// Create user in Hasura
+	query := map[string]interface{}{
+		"query": `
+            mutation insertUser($first_name: String!, $last_name: String!, $email: String!, $password: String!) {
+                insert_users(objects: {first_name: $first_name, last_name: $last_name, email: $email, password: $password}) {
+                    returning {
+                        id
+                    }
+                }
+            }
+        `,
+		"variables": map[string]interface{}{
+			"first_name": input.FirstName,
+			"last_name":  input.LastName,
+			"email":      input.Email,
+			"password":   hashedPassword,
+		},
 	}
 
-	users[input.Email] = user
-	userPasswords[input.Email] = hashedPassword // Store the hashed password
-	userIDCounter++
-
-	// Create token
-	token, err := CreateToken(user)
+	// Send request to Hasura
+	hasuraURL := "https://event-proj-2024.hasura.app/v1/graphql" // Replace with your Hasura endpoint
+	body, err := json.Marshal(query)
 	if err != nil {
-		http.Error(w, "Error generating token", http.StatusInternalServerError)
+		http.Error(w, "Failed to create query", http.StatusInternalServerError)
 		return
 	}
 
-	output := SignupOutput{
-		Token: token,
-		User:  user,
+	req, err := http.NewRequest("POST", hasuraURL, bytes.NewBuffer(body))
+	if err != nil {
+		http.Error(w, "Failed to create request", http.StatusInternalServerError)
+		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(output)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("x-hasura-admin-secret", "PwP8q7U2j2uG55r2l6jn22BH7cq6FhHIW27wKv4t6wvsrIt0p7V93NxzlJSx1E37")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		http.Error(w, "Failed to send request to Hasura", http.StatusInternalServerError)
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		http.Error(w, "Failed to create user", resp.StatusCode)
+		return
+	}
+
+	// Return success response
+	w.WriteHeader(http.StatusCreated)
+	w.Write([]byte("User created successfully"))
 }
 
-// Login handler
+// LoginHandler handles user login
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	var input LoginInput
+
+	// Decode the request body
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		http.Error(w, "Invalid input", http.StatusBadRequest)
 		return
 	}
+	log.Printf("Login attempt for email: %s", input.Email)
 
-	// Validate user credentials
-	user, exists := users[input.Email]
-	if !exists || !CheckPasswordHash(input.Password, userPasswords[input.Email]) {
+	// Query Hasura to check if the user exists
+	query := map[string]interface{}{
+		"query": `
+            query getUser($email: String!) {
+                users(where: {email: {_eq: $email}}) {
+                    id
+                    password
+                }
+            }
+        `,
+		"variables": map[string]interface{}{
+			"email": input.Email,
+		},
+	}
+
+	log.Printf("Request sent to Hasura for user check")
+	// Send request to Hasura
+	hasuraURL := "https://event-proj-2024.hasura.app/v1/graphql" // Replace with your Hasura endpoint
+	body, err := json.Marshal(query)
+	if err != nil {
+		http.Error(w, "Failed to create query", http.StatusInternalServerError)
+		return
+	}
+
+	req, err := http.NewRequest("POST", hasuraURL, bytes.NewBuffer(body))
+	if err != nil {
+		http.Error(w, "Failed to create request", http.StatusInternalServerError)
+		return
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("x-hasura-admin-secret", "PwP8q7U2j2uG55r2l6jn22BH7cq6FhHIW27wKv4t6wvsrIt0p7V93NxzlJSx1E37") // Replace with your Hasura admin secret
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		http.Error(w, "Failed to send request to Hasura", http.StatusInternalServerError)
+		return
+	}
+	defer resp.Body.Close()
+
+	// Read response body for debugging
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		http.Error(w, "Failed to read response", http.StatusInternalServerError)
+		return
+	}
+
+	// Log the response body for debugging
+	log.Printf("Hasura response: %s", string(respBody))
+
+	if resp.StatusCode != http.StatusOK {
+		http.Error(w, "Failed to get user", resp.StatusCode)
+		return
+	}
+
+	// Decode the response from Hasura
+	var response struct {
+		Data struct {
+			Users []struct {
+				ID       string `json:"id"`
+				Password string `json:"password"`
+			} `json:"users"`
+		} `json:"data"`
+	}
+
+	if err := json.Unmarshal(respBody, &response); err != nil {
+		http.Error(w, "Failed to decode response", http.StatusInternalServerError)
+		return
+	}
+
+	// Check if user exists
+	if len(response.Data.Users) == 0 {
+		http.Error(w, "User not found", http.StatusUnauthorized)
+		return
+	}
+	log.Printf("User found: %v", response.Data.Users)
+
+	// Compare the provided password with the stored hashed password
+	storedHashedPassword := response.Data.Users[0].Password
+	log.Printf("Password entered: %s", input.Password) // Be cautious about logging sensitive information!
+	log.Printf("Stored hashed password: %s", storedHashedPassword)
+
+	if !checkPasswordHash(input.Password, storedHashedPassword) {
 		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 		return
 	}
 
-	// Create token
-	token, err := CreateToken(user)
+	// Generate JWT token
+	token, err := generateJWT(response.Data.Users[0].ID)
 	if err != nil {
-		http.Error(w, "Error generating token", http.StatusInternalServerError)
+		http.Error(w, "Failed to generate token", http.StatusInternalServerError)
 		return
 	}
 
-	output := LoginOutput{
-		Token: token,
-		User:  user,
-	}
-
+	// Return the token
+	responseJSON := map[string]string{"token": token}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(output)
+	json.NewEncoder(w).Encode(responseJSON)
+}
+
+// hashPassword hashes the password using bcrypt
+func hashPassword(password string) (string, error) {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	return string(hashedPassword), nil
+}
+
+// checkPasswordHash compares a hashed password with its plain text equivalent
+func checkPasswordHash(password, hash string) bool {
+	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)) == nil
 }
