@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@vue/apollo-composable';
 import gql from 'graphql-tag';
 
 // GraphQL queries and mutations
@@ -7,7 +7,6 @@ const GET_ALL_EVENTS = gql`
     events {
       id
       title
-      location
       venue
       address
       price
@@ -38,6 +37,7 @@ const GET_EVENT_BY_ID = gql`
   query GetEventById($eventId: uuid!) {
     events(where: { id: { _eq: $eventId } }) {
       id
+      featured_image
       title
       location
       venue

@@ -1,36 +1,36 @@
 <script setup>
-import { ref } from 'vue';
-import { useForm, useField } from 'vee-validate';
-import * as yup from 'yup';
-// import { login } from '@/composables/UseAuth'; 
-import { useApolloClient } from '@apollo/client';
+// import { ref } from 'vue';
+// import { useForm, useField } from 'vee-validate';
+// import * as yup from 'yup';
+// // import { login } from '@/composables/UseAuth'; 
+// import { useApolloClient } from '@apollo/client';
 
-const client = useApolloClient();
+// const client = useApolloClient();
 
-const { handleSubmit, errors, isSubmitting } = useForm({
-  validationSchema: yup.object({
-    email: yup.string().email('Invalid email format').required('Email is required'),
-    password: yup.string().required('Password is required'),
-  }),
-});
+// const { handleSubmit, errors, isSubmitting } = useForm({
+//   validationSchema: yup.object({
+//     email: yup.string().email('Invalid email format').required('Email is required'),
+//     password: yup.string().required('Password is required'),
+//   }),
+// });
 
-// Using fields for validation
-const { value: email } = useField('email');
-const { value: password } = useField('password');
+// // Using fields for validation
+// const { value: email } = useField('email');
+// const { value: password } = useField('password');
 
-// Handling login
-const handleLogin = async (values) => {
-  try {
-    const { data } = await login(client, {
-      email: values.email,
-      password: values.password,
-    });
-    // Handle successful login (e.g., save token, redirect)
-    console.log(data.login.token);
-  } catch (err) {
-    console.error('Login error:', err.message);
-  }
-};
+// // Handling login
+// const handleLogin = async (values) => {
+//   try {
+//     const { data } = await login(client, {
+//       email: values.email,
+//       password: values.password,
+//     });
+//     // Handle successful login (e.g., save token, redirect)
+//     console.log(data.login.token);
+//   } catch (err) {
+//     console.error('Login error:', err.message);
+//   }
+// };
 </script>
 
 

@@ -36,7 +36,7 @@
 
         <div class="flex items-center space-x-8">
           <NuxtLink
-              to="/create-events"
+              to="#"
               class="text-[#333] hover:text-[#007bff] text-[15px] font-semibold pr-12 flex flex-row"
               >Create Events</NuxtLink>
           <div class="flex flex-row">

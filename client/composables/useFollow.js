@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@vue/apollo-composable';
 import gql from 'graphql-tag';
 
 // GraphQL queries and mutations
