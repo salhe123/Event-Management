@@ -27,12 +27,11 @@ export default defineNuxtConfig({
   apollo: {
     clients: {
       default: {
-        // Specify the httpEndpoint and also set headers directly here
         httpEndpoint: process.env.HASURA_GRAPHQL_ENDPOINT || "",
-        // Add the authorization header here
         httpLinkOptions: {
           headers: {
             'x-hasura-admin-secret': process.env.HASURA_ADMIN_SECRET || "",
+            Authorization: `Bearer ${typeof window !== 'undefined' ? localStorage.getItem('token') || '' : ''}`,
           },
         },
       },

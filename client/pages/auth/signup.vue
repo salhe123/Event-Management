@@ -1,40 +1,44 @@
 <script setup>
-// import { ref } from 'vue';
-// import { useApolloClient } from '@nuxtjs/apollo';
-// import { signup } from '@/composables/UseAuth';
-// import * as yup from 'yup';
-// import { useField, Form, Field, ErrorMessage } from 'vee-validate';
+import { useApolloClient } from '@vue/apollo-composable';
+import { signup } from '@/composables/UseAuth';
+import * as yup from 'yup';
+import { useField, Form, Field, ErrorMessage } from 'vee-validate';
+import { useRouter } from '#imports'; // Use Nuxt's useRouter composable
 
-// // Yup validation schema
-// const signupSchema = yup.object({
-//   firstName: yup.string().required('First name is required'),
-//   lastName: yup.string().required('Last name is required'),
-//   email: yup.string().email('Invalid email').required('Email is required'),
-//   password: yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
-//   confirmPassword: yup.string()
-//     .oneOf([yup.ref('password')], 'Passwords must match')
-//     .required('Confirm password is required'),
-// });
+// Yup validation schema
+const signupSchema = yup.object({
+  firstName: yup.string().required('First name is required'),
+  lastName: yup.string().required('Last name is required'),
+  email: yup.string().email('Invalid email').required('Email is required'),
+  password: yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
+  confirmPassword: yup.string()
+    .oneOf([yup.ref('password')], 'Passwords must match')
+    .required('Confirm password is required'),
+});
 
-// // Apollo Client and error state
-// const error = ref(null);
-// const client = useApolloClient();
+// Apollo Client and error state
+const error = ref(null);
+const client = useApolloClient();
+const router = useRouter(); // Use Nuxt router for navigation
 
-// // Signup function
-// const handleSignup = async (values) => {
-//   try {
-//     const data = {
-//       first_name: values.firstName,
-//       last_name: values.lastName,
-//       email: values.email,
-//       password: values.password,
-//     };
-//     const response = await signup(client, data);
-//     console.log('Signup successful:', response);
-//   } catch (err) {
-//     error.value = err.message || 'Signup failed';
-//   }
-// };
+// Signup function
+const handleSignup = async (values) => {
+  try {
+    const data = {
+      first_name: values.firstName,
+      last_name: values.lastName,
+      email: values.email,
+      password: values.password,
+    };
+    const response = await signup(client, data);
+    console.log('Signup successful:', response);
+
+    // Redirect to dashboard on successful signup
+    router.push('/index');
+  } catch (err) {
+    error.value = err.message || 'Signup failed';
+  }
+};
 </script>
 
 <template>
@@ -101,5 +105,3 @@
     </div>
   </div>
 </template>
-
-
