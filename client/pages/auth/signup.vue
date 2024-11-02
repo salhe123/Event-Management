@@ -1,107 +1,126 @@
-<script setup>
-import { useApolloClient } from '@vue/apollo-composable';
-import { signup } from '@/composables/UseAuth';
-import * as yup from 'yup';
-import { useField, Form, Field, ErrorMessage } from 'vee-validate';
-import { useRouter } from '#imports'; // Use Nuxt's useRouter composable
-
-// Yup validation schema
-const signupSchema = yup.object({
-  firstName: yup.string().required('First name is required'),
-  lastName: yup.string().required('Last name is required'),
-  email: yup.string().email('Invalid email').required('Email is required'),
-  password: yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
-  confirmPassword: yup.string()
-    .oneOf([yup.ref('password')], 'Passwords must match')
-    .required('Confirm password is required'),
-});
-
-// Apollo Client and error state
-const error = ref(null);
-const client = useApolloClient();
-const router = useRouter(); // Use Nuxt router for navigation
-
-// Signup function
-const handleSignup = async (values) => {
-  try {
-    const data = {
-      first_name: values.firstName,
-      last_name: values.lastName,
-      email: values.email,
-      password: values.password,
-    };
-    const response = await signup(client, data);
-    console.log('Signup successful:', response);
-
-    // Redirect to dashboard on successful signup
-    router.push('/index');
-  } catch (err) {
-    error.value = err.message || 'Signup failed';
-  }
-};
-</script>
-
 <template>
-  <div class="font-[sans-serif]">
-    <div class="text-center bg-gradient-to-r from-blue-800 to-blue-400 min-h-[160px] sm:p-6 p-4">
-      <h4 class="sm:text-3xl text-2xl font-bold text-white">Create your free account</h4>
-    </div>
+  <div class="flex justify-center items-center min-h-screen bg-gray-800">
+    <div class="w-full max-w-md bg-gray-900 p-8 rounded-lg shadow-lg">
+      <form @submit.prevent="onSubmit" class="space-y-6">
+        <h2 class="text-3xl font-bold text-center text-white">Create Your Account</h2>
 
-    <div class="mx-4 mb-4 -mt-16">
-      <Form :validation-schema="signupSchema" @submit="handleSignup" class="max-w-4xl mx-auto bg-white shadow-[0_2px_13px_-6px_rgba(0,0,0,0.4)] sm:p-8 p-4 rounded-md">
-        <div class="grid md:grid-cols-2 gap-8">
-          <button type="button" class="w-full px-6 py-3 flex items-center justify-center rounded-md text-gray-800 text-sm tracking-wider font-semibold bg-gray-100 hover:bg-gray-200">
-            <svg xmlns="http://www.w3.org/2000/svg" width="22px" fill="#fff" class="inline shrink-0 mr-4" viewBox="0 0 512 512">
-              <!-- SVG path for Google icon -->
-            </svg>
-            Continue with Google
+        <div v-if="error" class="text-xl font-semibold text-center text-red-500">
+          {{ error }}
+        </div>
+
+        <div>
+          <label for="first_name" class="block text-gray-300 text-sm font-bold mb-2">First Name</label>
+          <Field name="first_name" type="text" placeholder="Enter your first name" class="w-full p-3 border border-gray-700 rounded-lg shadow-sm" />
+          <ErrorMessage name="first_name" class="text-red-500 text-sm italic" />
+        </div>
+
+        <div>
+          <label for="last_name" class="block text-gray-300 text-sm font-bold mb-2">Last Name</label>
+          <Field name="last_name" type="text" placeholder="Enter your last name" class="w-full p-3 border border-gray-700 rounded-lg shadow-sm" />
+          <ErrorMessage name="last_name" class="text-red-500 text-sm italic" />
+        </div>
+
+        <div>
+          <label for="email" class="block text-gray-300 text-sm font-bold mb-2">Email</label>
+          <Field name="email" type="email" placeholder="Enter your email" class="w-full p-3 border border-gray-700 rounded-lg shadow-sm" />
+          <ErrorMessage name="email" class="text-red-500 text-sm italic" />
+        </div>
+
+        <div>
+          <label for="password" class="block text-gray-300 text-sm font-bold mb-2">Password</label>
+          <Field name="password" :type="showPassword ? 'text' : 'password'" placeholder="Password" class="w-full p-3 border border-gray-700 rounded-lg shadow-sm" />
+          <button type="button" @click="showPassword = !showPassword" class="absolute inset-y-0 right-0 pr-3 flex items-center">
+            <span v-if="showPassword">Hide</span>
+            <span v-else>Show</span>
           </button>
-          <button type="button" class="w-full px-6 py-3 flex items-center justify-center rounded-md text-white text-sm tracking-wider font-semibold bg-black hover:bg-[#333]">
-            <svg xmlns="http://www.w3.org/2000/svg" width="22px" fill="#fff" class="inline shrink-0 mr-4" viewBox="0 0 22.773 22.773">
-              <!-- SVG path for Github icon -->
-            </svg>
-            Continue with Github
+          <ErrorMessage name="password" class="text-red-500 text-sm italic" />
+        </div>
+
+        <div>
+          <label for="confirmPassword" class="block text-gray-300 text-sm font-bold mb-2">Confirm Password</label>
+          <Field name="confirmPassword" :type="showConfirmPassword ? 'text' : 'password'" placeholder="Confirm your password" class="w-full p-3 border border-gray-700 rounded-lg shadow-sm" />
+          <button type="button" @click="showConfirmPassword = !showConfirmPassword" class="absolute inset-y-0 right-0 pr-3 flex items-center">
+            <span v-if="showConfirmPassword">Hide</span>
+            <span v-else>Show</span>
           </button>
+          <ErrorMessage name="confirmPassword" class="text-red-500 text-sm italic" />
         </div>
 
-        <div class="my-8 flex items-center">
-          <p class="mx-4 text-center">Or</p>
-        </div>
-
-        <div class="grid md:grid-cols-2 gap-8">
-          <div>
-            <label class="text-gray-800 text-sm mb-2 block">First Name</label>
-            <Field name="firstName" type="text" class="bg-gray-100 focus:bg-transparent w-full text-sm text-gray-800 px-4 py-3 rounded-md outline-blue-500 transition-all" placeholder="Enter name" />
-            <ErrorMessage name="firstName" class="text-red-600 text-sm mt-1" />
-          </div>
-          <div>
-            <label class="text-gray-800 text-sm mb-2 block">Last Name</label>
-            <Field name="lastName" type="text" class="bg-gray-100 focus:bg-transparent w-full text-sm text-gray-800 px-4 py-3 rounded-md outline-blue-500 transition-all" placeholder="Enter last name" />
-            <ErrorMessage name="lastName" class="text-red-600 text-sm mt-1" />
-          </div>
-          <div>
-            <label class="text-gray-800 text-sm mb-2 block">Email</label>
-            <Field name="email" type="email" class="bg-gray-100 focus:bg-transparent w-full text-sm text-gray-800 px-4 py-3 rounded-md outline-blue-500 transition-all" placeholder="Enter email" />
-            <ErrorMessage name="email" class="text-red-600 text-sm mt-1" />
-          </div>
-          <div>
-            <label class="text-gray-800 text-sm mb-2 block">Password</label>
-            <Field name="password" type="password" class="bg-gray-100 focus:bg-transparent w-full text-sm text-gray-800 px-4 py-3 rounded-md outline-blue-500 transition-all" placeholder="Enter password" />
-            <ErrorMessage name="password" class="text-red-600 text-sm mt-1" />
-          </div>
-          <div>
-            <label class="text-gray-800 text-sm mb-2 block">Confirm Password</label>
-            <Field name="confirmPassword" type="password" class="bg-gray-100 focus:bg-transparent w-full text-sm text-gray-800 px-4 py-3 rounded-md outline-blue-500 transition-all" placeholder="Confirm password" />
-            <ErrorMessage name="confirmPassword" class="text-red-600 text-sm mt-1" />
-          </div>
-        </div>
-
-        <button type="submit" class="mt-10 w-full px-6 py-3 rounded-md text-white text-sm tracking-wider font-semibold bg-blue-600 hover:bg-blue-500">
-          Sign up
-        </button>
-
-        <p class="text-sm mt-4 text-center">Already have an account? <a href="/login" class="text-blue-600">Login here</a></p>
-      </Form>
+        <button type="submit" class="w-full bg-blue-600 text-white p-3 rounded-lg">Sign Up</button>
+      </form>
     </div>
   </div>
 </template>
+
+<script setup>
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { useField, useForm, ErrorMessage, Field } from 'vee-validate';
+import * as yup from 'yup';
+import { useMutation } from '@vue/apollo-composable';
+
+// Validation schema
+const schema = yup.object({
+  first_name: yup.string().min(3, 'First name must be at least 3 characters').required('Please enter your first name'),
+  last_name: yup.string().min(3, 'Last name must be at least 3 characters').required('Please enter your last name'),
+  email: yup.string().email('Please enter a valid email').required('Please enter your email'),
+  password: yup.string().min(5, 'Password must be at least 5 characters').required('Please enter your password'),
+  confirmPassword: yup.string().oneOf([yup.ref('password')], 'Passwords must match').required('Please confirm your password'),
+});
+
+const showPassword = ref(false);
+const showConfirmPassword = ref(false);
+const error = ref('');
+const router = useRouter();
+
+const { handleSubmit } = useForm({
+  validationSchema: schema,
+});
+
+const { value: first_name } = useField('first_name');
+const { value: last_name } = useField('last_name');
+const { value: email } = useField('email');
+const { value: password } = useField('password');
+const { value: confirmPassword } = useField('confirmPassword');
+
+// Define the GraphQL mutation
+const SIGNUP_MUTATION = gql`
+  mutation MyMutation($first_name: String!, $last_name: String!, $email: String!, $password: String!) {
+    signup(first_name: $first_name, last_name: $last_name, email: $email, password: $password) {
+      id
+    }
+  }
+`;
+
+// Handle form submission
+const onSubmit = handleSubmit(async (values) => {
+  console.log('Submitted values:', values);
+  const variables = {
+    first_name: values.first_name,
+    last_name: values.last_name,
+    email: values.email,
+    password: values.password,
+  };
+
+  const { mutate } = useMutation(SIGNUP_MUTATION, {
+    context: {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    },
+  });
+
+  try {
+    const { data } = await mutate({ variables });
+    console.log('Mutation response:', data);
+    router.push('/login'); // Redirect after successful signup
+  } catch (err) {
+    error.value = 'An error occurred during signup';
+    console.error('Mutation error:', err);
+  }
+});
+</script>
+
+<style scoped>
+/* Add your styles here */
+</style>

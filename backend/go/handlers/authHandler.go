@@ -33,7 +33,7 @@ type LoginInput struct {
 func generateJWT(userID string) (string, error) {
 	claims := jwt.MapClaims{
 		"sub": userID,
-		"exp": time.Now().Add(time.Hour * 72).Unix(),
+		"exp": time.Now().Add(time.Hour * 24).Unix(),
 		"https://hasura.io/jwt/claims": map[string]interface{}{
 			"x-hasura-user-id":       userID,
 			"x-hasura-default-role":  "user",

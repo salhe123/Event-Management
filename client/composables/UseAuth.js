@@ -1,85 +1,92 @@
-import { useApolloClient } from '@nuxtjs/apollo'
-import gql from 'graphql-tag'
+import { ref } from 'vue';
+import { useApolloClient } from '@vue/apollo-composable';
+import gql from 'graphql-tag';
+import { useRouter } from 'vue-router';
 
-const SIGNUP_MUTATION = gql`
-  mutation Signup($data: SignupInput!) {
-    signup(data: $data) {
-      token
-      user {
-        id
-        first_name
-        last_name
-        email
-      }
-    }
-  }
-`
+export function useAuth() {
+    const client = useApolloClient().client;
+    const router = useRouter();
+    const loading = ref(false);
+    const error = ref(null);
+    const token = ref(localStorage.getItem('token') || null);
 
-const LOGIN_MUTATION = gql`
-  mutation Login($data: LoginInput!) {
-    login(data: $data) {
-      token
-      user {
-        id
-        first_name
-        last_name
-        email
-      }
-    }
-  }
-`
+    const LOGIN_MUTATION = gql`
+        mutation login($email: String!, $password: String!) {
+            login(args: { email: $email, password: $password }) {
+                token
+            }
+        }
+    `;
 
-export const useAuth = () => {
-  const apolloClient = useApolloClient().default
-  const user = useState('user', () => null)
-  const error = useState('authError', () => null)
-  const loading = useState('authLoading', () => false)
+    const SIGNUP_MUTATION = gql`
+        mutation signup($firstName: String!, $lastName: String!, $email: String!, $password: String!) {
+            signup(
+                args: {
+                    first_name: $firstName
+                    last_name: $lastName
+                    email: $email
+                    password: $password
+                }
+            ) {
+                message
+            }
+        }
+    `;
 
-  const signup = async (signupData) => {
-    loading.value = true
-    try {
-      const { data } = await apolloClient.mutate({
-        mutation: SIGNUP_MUTATION,
-        variables: { data: signupData },
-      })
-      localStorage.setItem('token', data.signup.token)
-      user.value = data.signup.user
-      error.value = null
-    } catch (err) {
-      error.value = err.message
-    } finally {
-      loading.value = false
-    }
-  }
+    // Login function
+    const login = async (email, password) => {
+        loading.value = true;
+        error.value = null;
 
-  const login = async (loginData) => {
-    loading.value = true
-    try {
-      const { data } = await apolloClient.mutate({
-        mutation: LOGIN_MUTATION,
-        variables: { data: loginData },
-      })
-      localStorage.setItem('token', data.login.token)
-      user.value = data.login.user
-      error.value = null
-    } catch (err) {
-      error.value = err.message
-    } finally {
-      loading.value = false
-    }
-  }
+        try {
+            const response = await client.mutate({
+                mutation: LOGIN_MUTATION,
+                variables: { email, password },
+            });
+            const userToken = response.data.login.token;
+            token.value = userToken;
+            localStorage.setItem('token', userToken);
+            client.resetStore(); // Reset Apollo cache
+            await router.push('/'); // Redirect to homepage or dashboard after login
+        } catch (err) {
+            error.value = err.message;
+        } finally {
+            loading.value = false;
+        }
+    };
 
-  const logout = () => {
-    localStorage.removeItem('token')
-    user.value = null
-  }
+    // Signup function
+    const signup = async (firstName, lastName, email, password) => {
+        loading.value = true;
+        error.value = null;
 
-  return {
-    user,
-    loading,
-    error,
-    signup,
-    login,
-    logout,
-  }
+        try {
+            await client.mutate({
+                mutation: SIGNUP_MUTATION,
+                variables: { firstName, lastName, email, password },
+            });
+            await login(email, password); // Auto-login after signup
+        } catch (err) {
+            error.value = err.message;
+        } finally {
+            loading.value = false;
+        }
+    };
+
+    // Logout function
+    const logout = async () => {
+        token.value = null;
+        localStorage.removeItem('token');
+        await client.resetStore(); // Clear Apollo cache
+        await router.push('/login');
+    };
+
+    return {
+        loading,
+        error,
+        token,
+        login,
+        signup,
+        logout,
+    };
 }
