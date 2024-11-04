@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/joho/godotenv" // Make sure to import godotenv
+	"github.com/joho/godotenv"
 )
 
 func main() {
@@ -15,10 +15,11 @@ func main() {
 		log.Fatalf("Error loading .env file: %v", err)
 	}
 
-	// Initialize your handlers (e.g., ImageUploadHandler) here
+	// Initialize your handlers
 	http.HandleFunc("/api/signup", handler.SignupHandler)
 	http.HandleFunc("/api/login", handler.LoginHandler)
-	http.HandleFunc("/api/image_upload", handler.ImageUploadHandler) // Add this line
+	http.HandleFunc("/api/image_upload", handler.ImageUploadHandler)
+	http.HandleFunc("/payment", handler.PaymentHandler) // Now correctly references the exported handler
 
 	// Start the server on port 8080
 	log.Println("Starting server on port 8080...")
