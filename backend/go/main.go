@@ -21,9 +21,9 @@ func main() {
 	http.HandleFunc("/api/image_upload", handler.ImageUploadHandler)
 	http.HandleFunc("/payment", handler.PaymentHandler) // Now correctly references the exported handler
 
-	// Start the server on port 8080
-	log.Println("Starting server on port 8080...")
-	err = http.ListenAndServe(":8080", nil)
+	// Start the server on port7070
+	log.Println("Starting server on port 7070...")
+	err = http.ListenAndServe(":7070", nil)
 	if err != nil {
 		log.Fatalf("Could not start server: %s", err)
 	}

@@ -1,35 +1,73 @@
-version: '3.8'
+version: "3.8"
 
 services:
-  postgres:
-    image: postgres:15
-    ports:
-      - "5433:5432"
+  database:
+    image: postgres:16
     environment:
-      POSTGRES_DB: mydb
-      POSTGRES_USER: myuser
-      POSTGRES_PASSWORD: mypassword
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mydatabase
     volumes:
-      - db_data:/var/lib/postgresql/data  # Persist data
+      - minabtest:/var/lib/postgresql/data
+    networks:
+      - minabnetwork
+    restart: always
+    container_name: database
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d mydatabase"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  graphql-engine:
-    image: hasura/graphql-engine:v2.42.0
+  hasura:
+    image: hasura/graphql-engine:v2.23.0
+    environment:
+      HASURA_GRAPHQL_DATABASE_URL: postgres://user:password@database:5432/mydatabase
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
+      HASURA_GRAPHQL_DEV_MODE: "true"
+      HASURA_GRAPHQL_UNAUTHORIZED_ROLE: "anonymous"
+      HASURA_GRAPHQL_ADMIN_SECRET: "${ADMIN_SECRET_KEY}"  # Use env variable
+      HASURA_GRAPHQL_CORS_ORIGIN: "http://localhost:3000"
+      # HASURA_GRAPHQL_JWT_SECRET: '{ "type": "HS256", "key": "${JWT_SECRET_KEY}" }'  # Use env variable
     ports:
       - "8080:8080"
-    environment:
-      HASURA_GRAPHQL_DATABASE_URL: postgres://myuser:mypassword@postgres:5432/mydb
-      HASURA_GRAPHQL_ADMIN_SECRET: youradminsecret
-      HASURA_GRAPHQL_ENABLE_CONSOLE: "true" # Enable Hasura console
-      HASURA_GRAPHQL_DEV_MODE: "true"  # Dev mode for debugging
-
-  my-go-app:
-    build:
-      context: ./go  # Point to the 'go' directory where your Go app is located
-      dockerfile: Dockerfile  # Assuming the Dockerfile is named 'Dockerfile'
-    ports:
-      - "8082:8080"  # Change this to the port your Go app listens to
     depends_on:
-      - postgres
+      database:
+        condition: service_healthy
+    networks:
+      - minabnetwork
+    restart: always
+    container_name: hasura
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  my-go:
+    build:
+      context: ./go
+      dockerfile: Dockerfile
+    environment:
+      HASURA_GRAPHQL_URL: http://hasura:8080/v1/graphql
+      # ADMIN_URL: "${ADMIN_URL}"  # Add ADMIN_URL if needed
+    volumes:
+      - ./go/.env:/app/.env  # Correct path to .env
+    ports:
+      - "7070:7070"
+    depends_on:
+      database:
+        condition: service_healthy
+      hasura:
+        condition: service_healthy
+    networks:
+      - minabnetwork
+    restart: always
+    container_name: my-go  # Change container name to my-go
 
 volumes:
-  db_data:  # Volume for Postgres data persistence
+  minabtest:
+
+networks:
+  minabnetwork:
+    driver: bridge

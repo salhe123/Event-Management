@@ -24,21 +24,21 @@ export default defineNuxtConfig({
     },
   },
 
- apollo: {
-  clients: {
-    default: {
-      httpEndpoint: process.env.HASURA_GRAPHQL_ENDPOINT || "",
-      autoImports: true,
-      httpLinkOptions: {
-        headers: {
-          'x-hasura-admin-secret': process.env.HASURA_ADMIN_SECRET || "",
-          Authorization: `Bearer ${typeof window !== 'undefined' ? localStorage.getItem('token') || '' : ''}`,
+  apollo: {
+    clients: {
+      default: {
+        httpEndpoint: process.env.HASURA_GRAPHQL_ENDPOINT || "http://localhost:8080/v1/graphql",
+
+        httpLinkOptions: {
+          headers: {
+            'x-hasura-admin-secret': process.env.HASURA_ADMIN_SECRET || "",
+            Authorization: `Bearer ${typeof window !== 'undefined' ? localStorage.getItem('token') || '' : ''}`,
+            "Content-Type": "application/json",
+          },
         },
       },
     },
   },
-},
-
 
   compatibilityDate: '2024-08-28',
 });
