@@ -48,9 +48,15 @@ func generateJWT(userID string) (string, error) {
 	}
 	return tokenString, nil
 }
+func enableCORS(w http.ResponseWriter) {
+	w.Header().Set("Access-Control-Allow-Origin", "*") // Set this to your frontend's origin
+	w.Header().Set("Access-Control-Allow-Methods", "POST,GET, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+}
 
 // SignupHandler handles user signup
 func SignupHandler(w http.ResponseWriter, r *http.Request) {
+	enableCORS(w)
 	var input SignupInput
 
 	// Decode the request body

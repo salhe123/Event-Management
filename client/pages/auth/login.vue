@@ -2,8 +2,8 @@
 import { ref } from 'vue';
 import { useForm, useField } from 'vee-validate';
 import * as yup from 'yup';
-import { useApolloClient, gql } from '@vue/apollo-composable';
-import { useRouter } from 'vue-router';
+// import { useApolloClient, gql } from '@vue/apollo-composable';
+// import { useRouter } from 'vue-router';
 
 const client = useApolloClient();
 const router = useRouter();
@@ -40,7 +40,7 @@ const handleLogin = async (values) => {
       },
     });
     localStorage.setItem('token', data.login.token);
-    router.push('/index');
+    router.push('/auth/signup');
   } catch (err) {
     loginError.value = 'Login failed. Please check your credentials.';
     console.error('Login error:', err.message);
