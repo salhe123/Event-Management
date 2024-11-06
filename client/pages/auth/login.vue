@@ -1,59 +1,61 @@
 <script setup>
 import { ref } from 'vue';
-import { object } from 'yup';
-// import { useRouter } from 'vue-router';
-
-// GraphQL mutation for login
-const LOGIN_MUTATION = gql`
-mutation loginmutation($object:userLoginInput!){
-userLogin(object:$object){
-id
-token
-}
-}
-`;
+import { useRouter } from 'vue-router';
+import { useMutation } from '@vue/apollo-composable'; // Import useMutation
+import { gql } from '@apollo/client/core'; // Import gql to define the mutation
 
 const email = ref('');
 const password = ref('');
-const showPassword = ref(false);
-const error = ref(null);
+const error = ref('');
+const loading = ref(false);
 const router = useRouter();
 
-// Apollo mutation hook
-const { mutate } = useMutation(LOGIN_MUTATION, {
-  onError(err) {
-    error.value = 'Invalid email or password';
-  },
-  onCompleted(data) {
-    if (data && data.login && data.login.token) {
-      // Store the token, ideally in localStorage or a Vuex store
-      localStorage.setItem('auth_token', data.login.token);
-      router.push('/'); // Redirect to the dashboard or home page
-    }
-  },
-});
-const onSubmit=handleSubmit(async(values)=>{
-  const variables={
-    object:{
-      email:values.email,
-      password:values.password,
+// Define the login mutation
+const LOGIN_MUTATION = gql`
+  mutation Login($email: String!, $password: String!) {
+    login(arg1: { email: $email, password: $password }) { 
+      id
+      token
+      message
     }
   }
-})
+`;
 
-// const onSubmit = () => {
-//   if (!email.value || !password.value) {
-//     error.value = 'Please enter both email and password';
-//     return;
-//   }
+// Use the useMutation hook to set up the mutation
+const { mutate, loading: mutationLoading, error: mutationError, data } = useMutation(LOGIN_MUTATION);
 
-  // Trigger the login mutation
-  mutate({
-    email: email.value,
-    password: password.value,
-  });
+// Bind loading state to the mutation
+loading.value = mutationLoading;
 
+// Handle form submission
+const onSubmit = async () => {
+  error.value = '';
+
+  try {
+    // Call the mutation
+    const response = await mutate({
+      email: email.value,
+      password: password.value,
+    });
+
+    const { token } = response.data.login; // Access the result from response.data.login
+
+    if (token) {
+      // Save the JWT token (in localStorage, Vuex, etc.)
+      localStorage.setItem('auth_token', token);
+
+      // Redirect to a protected page (e.g., dashboard)
+      router.push('/');
+    } else {
+      error.value = 'Invalid credentials';
+    }
+  } catch (err) {
+    console.error(err);
+    error.value = 'An error occurred during login. Please try again.';
+  }
+};
 </script>
+
 
 <template>
   <div
@@ -150,8 +152,6 @@ const onSubmit=handleSubmit(async(values)=>{
     </div>
   </div>
 </template>
-
-
 
 <style scoped>
 /* Optional styling adjustments for your login form */
