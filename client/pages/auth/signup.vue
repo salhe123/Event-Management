@@ -1,3 +1,97 @@
+
+<script setup>
+import { ref } from "vue";
+import { useRouter } from "vue-router";
+import { useField, useForm, ErrorMessage, Field } from "vee-validate";
+import * as yup from "yup";
+import { useMutation } from "@vue/apollo-composable";
+// import gql from 'graphql-tag';
+
+// Validation schema
+const schema = yup.object({
+  first_name: yup
+    .string()
+    .min(3, "First name must be at least 3 characters")
+    .required("Please enter your first name"),
+  last_name: yup
+    .string()
+    .min(3, "Last name must be at least 3 characters")
+    .required("Please enter your last name"),
+  email: yup
+    .string()
+    .email("Please enter a valid email")
+    .required("Please enter your email"),
+  password: yup
+    .string()
+    .min(5, "Password must be at least 5 characters")
+    .required("Please enter your password"),
+  confirmPassword: yup
+    .string()
+    .oneOf([yup.ref("password")], "Passwords must match")
+    .required("Please confirm your password"),
+});
+
+const showPassword = ref(false);
+const showConfirmPassword = ref(false);
+const error = ref("");
+const router = useRouter();
+
+const { handleSubmit } = useForm({
+  validationSchema: schema,
+});
+
+const { value: first_name } = useField("first_name");
+const { value: last_name } = useField("last_name");
+const { value: email } = useField("email");
+const { value: password } = useField("password");
+const { value: confirmPassword } = useField("confirmPassword");
+
+// Define the GraphQL mutation
+const SIGNUP_MUTATION = gql`
+  mutation insertUser($first_name: String!, $last_name: String!, $email: String!, $password: String!) {
+                insert_users(objects: {first_name: $first_name, last_name: $last_name, email: $email, password: $password}) {
+                    returning {
+                        id
+                    }
+                }
+            }
+`;
+
+// Handle form submission
+const onSubmit = handleSubmit(async (values) => {
+  console.log("Submitted values:", values);
+
+  // Prepare the variables to match the input structure defined in the mutation
+  const variables = {
+    first_name: values.first_name,
+    last_name: values.last_name,
+    email: values.email,
+    password: values.password,
+  };
+
+  const { mutate } = useMutation(SIGNUP_MUTATION, {
+    variables,
+    context: {
+      Headers: {
+        "Content-Type": "application/json",
+      },
+    },
+  });
+
+  try {
+    const { data } = await mutate(variables);
+    console.log("Mutation response:", data);
+    router.push("/auth/login"); // Redirect after successful signup
+  } catch (err) {
+    if (err.graphQLErrors && err.graphQLErrors[0]) {
+      error.value = err.graphQLErrors[0].message; // Display specific GraphQL error message
+    } else {
+      error.value = "An error occurred during signup";
+    }
+  }
+});
+</script>
+
 <template>
   <div
     class="flex justify-center items-center min-h-screen bg-gradient-to-br from-blue-300 via-indigo-200 to-purple-300 p-4"
@@ -170,110 +264,6 @@
   </div>
 </template>
 
-<script setup>
-import { ref } from "vue";
-import { useRouter } from "vue-router";
-import { useField, useForm, ErrorMessage, Field } from "vee-validate";
-import * as yup from "yup";
-import { useMutation } from "@vue/apollo-composable";
-// import gql from 'graphql-tag';
-
-// Validation schema
-const schema = yup.object({
-  first_name: yup
-    .string()
-    .min(3, "First name must be at least 3 characters")
-    .required("Please enter your first name"),
-  last_name: yup
-    .string()
-    .min(3, "Last name must be at least 3 characters")
-    .required("Please enter your last name"),
-  email: yup
-    .string()
-    .email("Please enter a valid email")
-    .required("Please enter your email"),
-  password: yup
-    .string()
-    .min(5, "Password must be at least 5 characters")
-    .required("Please enter your password"),
-  confirmPassword: yup
-    .string()
-    .oneOf([yup.ref("password")], "Passwords must match")
-    .required("Please confirm your password"),
-});
-
-const showPassword = ref(false);
-const showConfirmPassword = ref(false);
-const error = ref("");
-const router = useRouter();
-
-const { handleSubmit } = useForm({
-  validationSchema: schema,
-});
-
-const { value: first_name } = useField("first_name");
-const { value: last_name } = useField("last_name");
-const { value: email } = useField("email");
-const { value: password } = useField("password");
-const { value: confirmPassword } = useField("confirmPassword");
-
-// Define the GraphQL mutation
-const SIGNUP_MUTATION = gql`
-  mutation insertUser(
-    $first_name: String!
-    $last_name: String!
-    $email: String!
-    $password: String!
-  ) {
-    insert_users(
-      objects: {
-        first_name: $first_name
-        last_name: $last_name
-        email: $email
-        password: $password
-      }
-    ) {
-      returning {
-        id
-      }
-    }
-  }
-`;
-
-// Handle form submission
-const onSubmit = handleSubmit(async (values) => {
-  console.log("Submitted values:", values);
-
-  // Prepare the variables to match the input structure defined in the mutation
-  const variables = {
-    first_name: values.first_name,
-    last_name: values.last_name,
-    email: values.email,
-    password: values.password,
-  };
-
-  const { mutate } = useMutation(SIGNUP_MUTATION, {
-    variables,
-    context: {
-      Headers: {
-        "Content-Type": "application/json",
-      },
-    },
-  });
-
-  try {
-    const { data } = await mutate(variables);
-    console.log("Mutation response:", data);
-    router.push("/auth/login"); // Redirect after successful signup
-  } catch (err) {
-    if (err.graphQLErrors && err.graphQLErrors[0]) {
-      error.value = err.graphQLErrors[0].message; // Display specific GraphQL error message
-    } else {
-      error.value = "An error occurred during signup";
-    }
-  }
-});
-</script>
 
 <style scoped>
 /* Add any additional styling here if necessary */

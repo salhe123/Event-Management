@@ -42,21 +42,15 @@ func generateJWT(userID string) (string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString(jwtSecret) // Use the jwtSecret defined earlier
+	tokenString, err := token.SignedString(jwtSecret)
 	if err != nil {
 		return "", err
 	}
 	return tokenString, nil
 }
-func enableCORS(w http.ResponseWriter) {
-	w.Header().Set("Access-Control-Allow-Origin", "*") // Set this to your frontend's origin
-	w.Header().Set("Access-Control-Allow-Methods", "POST,GET, OPTIONS")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-}
 
 // SignupHandler handles user signup
 func SignupHandler(w http.ResponseWriter, r *http.Request) {
-	enableCORS(w)
 	var input SignupInput
 
 	// Decode the request body
@@ -106,7 +100,7 @@ func SignupHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("x-hasura-admin-secret", "PwP8q7U2j2uG55r2l6jn22BH7cq6FhHIW27wKv4t6wvsrIt0p7V93NxzlJSx1E37")
+	req.Header.Set("x-hasura-admin-secret", "PwP8q7U2j2uG55r2l6jn22BH7cq6FhHIW27wKv4t6wvsrIt0p7V93NxzlJSx1E37") // Replace with your Hasura admin secret
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -135,7 +129,6 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid input", http.StatusBadRequest)
 		return
 	}
-	log.Printf("Login attempt for email: %s", input.Email)
 
 	// Query Hasura to check if the user exists
 	query := map[string]interface{}{
@@ -152,7 +145,6 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	log.Printf("Request sent to Hasura for user check")
 	// Send request to Hasura
 	hasuraURL := "https://event-proj-2024.hasura.app/v1/graphql" // Replace with your Hasura endpoint
 	body, err := json.Marshal(query)
@@ -213,13 +205,9 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "User not found", http.StatusUnauthorized)
 		return
 	}
-	log.Printf("User found: %v", response.Data.Users)
 
 	// Compare the provided password with the stored hashed password
 	storedHashedPassword := response.Data.Users[0].Password
-	log.Printf("Password entered: %s", input.Password) // Be cautious about logging sensitive information!
-	log.Printf("Stored hashed password: %s", storedHashedPassword)
-
 	if !checkPasswordHash(input.Password, storedHashedPassword) {
 		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 		return

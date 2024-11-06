@@ -1,79 +1,158 @@
 <script setup>
 import { ref } from 'vue';
-import { useForm, useField } from 'vee-validate';
-import * as yup from 'yup';
-// import { useApolloClient, gql } from '@vue/apollo-composable';
+import { object } from 'yup';
 // import { useRouter } from 'vue-router';
-
-const client = useApolloClient();
-const router = useRouter();
 
 // GraphQL mutation for login
 const LOGIN_MUTATION = gql`
-  mutation Login($email: String!, $password: String!) {
-    login(email: $email, password: $password) {
-      token
-    }
-  }
+mutation loginmutation($object:userLoginInput!){
+userLogin(object:$object){
+id
+token
+}
+}
 `;
 
-// Form validation
-const { handleSubmit, errors, isSubmitting } = useForm({
-  validationSchema: yup.object({
-    email: yup.string().email('Invalid email format').required('Email is required'),
-    password: yup.string().required('Password is required'),
-  }),
+const email = ref('');
+const password = ref('');
+const showPassword = ref(false);
+const error = ref(null);
+const router = useRouter();
+
+// Apollo mutation hook
+const { mutate } = useMutation(LOGIN_MUTATION, {
+  onError(err) {
+    error.value = 'Invalid email or password';
+  },
+  onCompleted(data) {
+    if (data && data.login && data.login.token) {
+      // Store the token, ideally in localStorage or a Vuex store
+      localStorage.setItem('auth_token', data.login.token);
+      router.push('/'); // Redirect to the dashboard or home page
+    }
+  },
 });
-
-const { value: email, errorMessage: emailError, handleBlur: handleEmailBlur } = useField('email');
-const { value: password, errorMessage: passwordError, handleBlur: handlePasswordBlur } = useField('password');
-const loginError = ref('');
-
-// Login function
-const handleLogin = async (values) => {
-  try {
-    const { data } = await client.mutate({
-      mutation: LOGIN_MUTATION,
-      variables: {
-        email: values.email,
-        password: values.password,
-      },
-    });
-    localStorage.setItem('token', data.login.token);
-    router.push('/auth/signup');
-  } catch (err) {
-    loginError.value = 'Login failed. Please check your credentials.';
-    console.error('Login error:', err.message);
+const onSubmit=handleSubmit(async(values)=>{
+  const variables={
+    object:{
+      email:values.email,
+      password:values.password,
+    }
   }
-};
+})
+
+// const onSubmit = () => {
+//   if (!email.value || !password.value) {
+//     error.value = 'Please enter both email and password';
+//     return;
+//   }
+
+  // Trigger the login mutation
+  mutate({
+    email: email.value,
+    password: password.value,
+  });
+
 </script>
 
 <template>
-  <div class="font-sans min-h-screen flex items-center justify-center bg-gray-50">
-    <div class="w-full max-w-lg p-8 bg-white shadow-lg rounded-lg">
-      <h3 class="text-2xl font-semibold text-gray-900 text-center mb-6">Welcome Back</h3>
-      <p class="text-sm text-center text-gray-700 mb-8">
-        Don’t have an account? 
-        <nuxt-link to="/auth/signup" class="text-blue-600 font-semibold hover:underline ml-1">Sign up</nuxt-link>
-      </p>
+  <div
+    class="flex justify-center items-center min-h-screen bg-gradient-to-br from-blue-300 via-indigo-200 to-purple-300 p-4"
+  >
+    <div
+      class="flex flex-col md:flex-row w-full max-w-4xl bg-gray-200 rounded-lg shadow-lg overflow-hidden"
+    >
+      <!-- Form Section -->
+      <div class="w-full md:w-1/2 p-8">
+        <form @submit.prevent="onSubmit" class="space-y-6">
+          <h2 class="text-3xl font-bold text-center text-white">
+            Login to Your Account
+          </h2>
 
-      <form @submit.prevent="handleSubmit(handleLogin)" class="space-y-6">
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Email</label>
-          <input v-model="email" @blur="handleEmailBlur" type="text" required class="w-full mt-1 px-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder="Enter your email" />
-          <span v-if="emailError" class="text-red-500 text-xs mt-1">{{ emailError }}</span>
-        </div>
+          <!-- Error Message -->
+          <div v-if="error" class="text-lg font-semibold text-center text-red-500">
+            {{ error }}
+          </div>
 
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Password</label>
-          <input v-model="password" @blur="handlePasswordBlur" type="password" required class="w-full mt-1 px-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder="Enter your password" />
-          <span v-if="passwordError" class="text-red-500 text-xs mt-1">{{ passwordError }}</span>
-        </div>
+          <!-- Email Field -->
+          <div class="relative">
+            <label for="email" class="block text-gray-600 text-sm font-bold mb-2">
+              Email
+            </label>
+            <input
+              v-model="email"
+              type="email"
+              placeholder="Enter your email"
+              class="w-full p-2 pl-3 border border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-800 text-white"
+            />
+          </div>
 
-        <span v-if="loginError" class="text-red-500 text-sm">{{ loginError }}</span>
+          <!-- Password Field -->
+          <div class="relative">
+            <label for="password" class="block text-gray-600 text-sm font-bold mb-2">
+              Password
+            </label>
+            <input
+              v-model="password"
+              :type="showPassword ? 'text' : 'password'"
+              placeholder="Enter your password"
+              class="w-full p-2 pl-3 border border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-800 text-white"
+            />
+            <button
+              type="button"
+              @click="showPassword = !showPassword"
+              class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-200"
+            >
+              <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+            </button>
+          </div>
 
-        <button type="submit" :disabled="isSubmitting" class="w-full mt-6 py-2.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none">Sign in</button>
-      </form>
+          <!-- Login Button -->
+          <button
+            type="submit"
+            class="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg font-bold shadow-lg transform transition-all duration-300 hover:scale-105"
+          >
+            Log In
+          </button>
+
+          <!-- Forgot Password Link -->
+          <div class="text-center mt-4 text-gray-700">
+            <nuxt-link
+              to="#"
+              class="text-blue-600 hover:text-blue-800 font-medium"
+            >
+              Forgot your password? Reset here.
+            </nuxt-link>
+          </div>
+
+          <!-- No account? Sign Up Link -->
+          <div class="text-center mt-4 text-gray-700">
+            <nuxt-link
+              to="/auth/signup"
+              class="text-blue-600 hover:text-blue-800 font-medium"
+            >
+              Don't have an account? Sign up here.
+            </nuxt-link>
+          </div>
+        </form>
+      </div>
+
+      <!-- Image Section (Hidden on smaller screens) -->
+      <div
+        class="w-full md:w-1/2 hidden md:flex items-center justify-center btemplate00"
+      >
+        <img
+          src="../../assets/css/image/logo.png"
+          alt="Login Illustration"
+          class="w-full h-full object-cover"
+        />
+      </div>
     </div>
   </div>
 </template>
+
+
+
+<style scoped>
+/* Optional styling adjustments for your login form */
+</style>

@@ -26,7 +26,7 @@ services:
       HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
       HASURA_GRAPHQL_DEV_MODE: "true"
       HASURA_GRAPHQL_UNAUTHORIZED_ROLE: "anonymous"
-      HASURA_GRAPHQL_ADMIN_SECRET: "${ADMIN_SECRET_KEY}"  # Use env variable
+      HASURA_GRAPHQL_ADMIN_SECRET: "${ADMIN_SECRET_KEY}" 
       HASURA_GRAPHQL_CORS_ORIGIN: "http://localhost:3000"
       # HASURA_GRAPHQL_JWT_SECRET: '{ "type": "HS256", "key": "${JWT_SECRET_KEY}" }'  # Use env variable
     ports:
