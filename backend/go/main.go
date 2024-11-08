@@ -1,7 +1,7 @@
 package main
 
 import (
-	handler "event_backend/handlers" // Adjust this import path based on your module name
+	"event_backend/handlers" // Adjust based on your module name
 	"log"
 	"net/http"
 
@@ -16,12 +16,10 @@ func main() {
 	}
 
 	// Initialize your handlers
-	http.HandleFunc("/api/signup", handler.SignupHandler)
-	http.HandleFunc("/api/login", handler.LoginHandler)
-	http.HandleFunc("/api/image_upload", handler.ImageUploadHandler)
-	http.HandleFunc("/payment", handler.PaymentHandler) // Now correctly references the exported handler
+	http.HandleFunc("/api/signup", handlers.SignupHandler)
+	http.HandleFunc("/api/login", handlers.LoginHandler)
 
-	// Start the server on port7070
+	// Start the server on port 7070
 	log.Println("Starting server on port 7070...")
 	err = http.ListenAndServe(":7070", nil)
 	if err != nil {

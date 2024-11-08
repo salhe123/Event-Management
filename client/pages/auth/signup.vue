@@ -1,4 +1,3 @@
-
 <script setup>
 import { ref } from "vue";
 import { useRouter } from "vue-router";
@@ -48,13 +47,23 @@ const { value: confirmPassword } = useField("confirmPassword");
 
 // Define the GraphQL mutation
 const SIGNUP_MUTATION = gql`
-  mutation insertUser($first_name: String!, $last_name: String!, $email: String!, $password: String!) {
-                insert_users(objects: {first_name: $first_name, last_name: $last_name, email: $email, password: $password}) {
-                    returning {
-                        id
-                    }
-                }
-            }
+  mutation (
+    $first_name: String!
+    $last_name: String!
+    $email: String!
+    $password: String!
+  ) {
+    insert_users_one(
+      object: {
+        first_name: $first_name
+        last_name: $last_name
+        email: $email
+        password: $password
+      }
+    ) {
+      id
+    }
+  }
 `;
 
 // Handle form submission
@@ -263,7 +272,6 @@ const onSubmit = handleSubmit(async (values) => {
     </div>
   </div>
 </template>
-
 
 <style scoped>
 /* Add any additional styling here if necessary */
