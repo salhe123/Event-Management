@@ -12,11 +12,15 @@ function toggleMenu() {
     class="flex bg-white border-b py-4 sm:px-8 px-6 font-[sans-serif] min-h-[80px] tracking-wide relative z-50"
   >
     <div class="flex flex-wrap items-center justify-between w-full">
-      <!-- Logo Placeholder (Optional) -->
+      <!-- Logo Section (Link to Home) -->
       <div class="flex lg:hidden items-center space-x-2">
-        <nuxt-link to="/" class="text-2xl font-semibold text-[#007bff]">Logo</nuxt-link>
+        <nuxt-link to="/" class="text-2xl font-semibold text-[#007bff]">My Event App</nuxt-link>
       </div>
-      
+      <div class="hidden lg:flex items-center space-x-8">
+        <!-- Logo Desktop Version -->
+        <nuxt-link to="/" class="text-2xl font-semibold text-[#007bff]">My Event App</nuxt-link>
+      </div>
+
       <!-- Search and Filter Section -->
       <div class="flex-1 flex flex-col lg:flex-row items-center gap-y-4 lg:gap-x-6">
         <div class="flex items-center w-full lg:w-auto">
@@ -25,7 +29,7 @@ function toggleMenu() {
           >
             <input
               type="text"
-              placeholder="Search something..."
+              placeholder="Search events..."
               class="w-full text-sm bg-transparent outline-none pr-2"
             />
             <Icon name="search" class="cursor-pointer text-gray-600 w-5 h-5 mr-4" />
@@ -40,10 +44,10 @@ function toggleMenu() {
           </div>
         </div>
         
-        <!-- Action Links Section -->
+        <!-- Action Links Section (Create Event, Login, Sign Up) -->
         <div class="hidden lg:flex items-center space-x-8">
-          <NuxtLink to="#" class="text-[#333] hover:text-[#007bff] text-[15px] font-semibold">
-            Create Events
+          <NuxtLink to="/create-event" class="text-[#333] hover:text-[#007bff] text-[15px] font-semibold">
+            Create Event
           </NuxtLink>
           <NuxtLink to="/auth/login" class="flex space-x-4">
             <button
@@ -60,18 +64,18 @@ function toggleMenu() {
         </div>
       </div>
 
-      <!-- Mobile Menu Toggle -->
+      <!-- Mobile Menu Toggle (Hamburger Icon) -->
       <button @click="toggleMenu" class="lg:hidden ml-auto">
         <Icon name="uil:github" class="w-6 h-6" />
       </button>
 
-      <!-- Mobile Menu -->
+      <!-- Mobile Menu (Dropdown for Small Screens) -->
       <div
         v-if="isMenuOpen"
         class="absolute top-full left-0 w-full bg-white shadow-lg flex flex-col items-center space-y-4 py-6 lg:hidden"
       >
         <NuxtLink to="#" class="text-[#333] hover:text-[#007bff] text-[15px] font-semibold">
-          Create Events
+          Create Event
         </NuxtLink>
         <NuxtLink to="/auth/login" class="w-full text-center">
           <button
@@ -92,6 +96,6 @@ function toggleMenu() {
   </header>
 </template>
 
-
-
-
+<style scoped>
+/* Optional: Add additional styling for header elements like hover effects */
+</style>

@@ -1,174 +1,155 @@
-
 <script setup>
-import Header from "../components/header.vue";
-import Footer from "../components/footer.vue";
-// import { ref, computed, onMounted } from "vue";
-// import { useEvents } from "../composables/useEvents";
+import { ref, onMounted, computed, watch } from 'vue';
+import header from "../components/header.vue";
+import footer from "../components/footer.vue"
 
+const GET_EVENTS = gql`
+  query GetEvents($limit: Int!, $offset: Int!) {
+    events(limit: $limit, offset: $offset) {
+      title
+      venue
+      id
+      organizer_id
+      price
+      location
+      address
+      description
+      created_at
+      date
+      updated_at
+    }
+    events_aggregate {
+      aggregate {
+        count
+      }
+    }
+  }
+`;
 
-// // Using events composable
-// const { eventsData, loadingEvents, errorEvents } = useEvents();
-// const blogs = ref([]);
+const pageSize = 6;  
+const currentPage = ref(1);  
+const totalEvents = ref(0);  
+const totalPages = computed(() => Math.ceil(totalEvents.value / pageSize));  
 
-// // Computed property to handle `eventsData` safely
-// const eventsList = computed(() => {
-//   return eventsData?.events || [];  // Default to an empty array if `eventsData` is undefined
-// });
+const { result, loading, error } = useQuery(GET_EVENTS, {
+  limit: pageSize,
+  offset: (currentPage.value - 1) * pageSize,
+});
 
-// // Pagination state
-// const currentPage = ref(1);
-// const itemsPerPage = 6; // Number of events per page
+const events = ref([]);  
 
-// // Fetch events on component mount
-// onMounted(() => {
-//   if (!loadingEvents && eventsList.value.length > 0) {
-//     blogs.value = eventsList.value;
-//   }
-// });
+watch(result, () => {
+  if (result.value) {
+    events.value = result.value.events;
+    totalEvents.value = result.value.events_aggregate.aggregate.count;
+  }
+}, { immediate: true });
 
-// // Computed for paginated events
-// const paginatedEvents = computed(() => {
-//   const start = (currentPage.value - 1) * itemsPerPage;
-//   const end = start + itemsPerPage;
-//   return blogs.value.slice(start, end);
-// });
+const changePage = (newPage) => {
+  if (newPage >= 1 && newPage <= totalPages.value) {
+    currentPage.value = newPage;
+  }
+};
 
-// // Computed total pages
-// const totalPages = computed(() => {
-//   return Math.ceil(blogs.value.length / itemsPerPage);
-// });
+const buyTicket = (eventId) => {
+  alert(`Buying ticket for event ID: ${eventId}`);
+};
 
-// // Change page function
-// const goToPage = (page) => {
-//   if (page >= 1 && page <= totalPages.value) {
-//     currentPage.value = page;
-//   }
-// };
+onMounted(() => {
+  changePage(currentPage.value);
+});
 
-// // Date formatting function
-// const formatDate = (dateString) => {
-//   const options = { year: 'numeric', month: 'long', day: 'numeric' };
-//   return new Date(dateString).toLocaleDateString(undefined, options);
-// };
+// Computed property for paginated events
+const paginatedEvents = computed(() => {
+  const startIndex = (currentPage.value - 1) * pageSize;
+  return events.value.slice(startIndex, startIndex + pageSize);
+});
 </script>
+
+
 <template>
-  <div class="min-h-screen flex flex-col bg-gray-100">
-    <!-- Header Component -->
-    <header class="bg-white shadow">
-      <Header />
-    </header>
-
-    <!-- Main Content -->
-    <main class="flex-1 container mx-auto px-4 py-6">
-      <h1 class="text-2xl font-semibold text-gray-800 mb-6">Upcoming Events</h1>
-
-      <!-- Loading & Error States -->
-      <div v-if="loadingEvents" class="flex justify-center py-8">
-        <div class="loader">Loading...</div>
-      </div>
-      <div v-if="errorEvents" class="text-center text-red-500">
-        An error occurred: {{ errorEvents.message }}
-      </div>
-
-      <!-- Events Grid -->
-      <div v-else class="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-        <div
-          v-for="event in paginatedEvents"
-          :key="event.id"
-          class="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow"
-        >
-          <h2 class="text-xl font-semibold text-gray-800">{{ event.title }}</h2>
-          <p class="text-gray-600 text-sm">{{ event.venue }}</p>
-          <p class="text-gray-600 text-sm">{{ event.address }}</p>
-          <p class="text-gray-700 mt-2">
-            <span class="font-semibold">Date:</span> {{ formatDate(event.event_date) }}
-          </p>
-          <p class="text-gray-700">
-            <span class="font-semibold">Price:</span> ${{ event.price }}
-          </p>
-
-          <!-- Action Buttons -->
-          <div class="mt-4 flex justify-end space-x-4">
-            <button class="text-blue-600 hover:text-blue-800 flex items-center space-x-1">
-              <icon name="uil:edit" class="w-5 h-5" />
-              <span>Edit</span>
+  <div>
+    <Header />
+  </div>
+  <div class="container mx-auto p-4">
+  
+    
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <!-- Loop through Events -->
+      <div
+        v-for="event in paginatedEvents"
+        :key="event.id"
+        class="bg-white border rounded-lg shadow-lg overflow-hidden"
+      >
+       
+        <div class="relative">
+          <img
+            src="https://via.placeholder.com/300x200"  
+            alt="Event"
+            class="w-full h-48 object-cover"
+          />
+          
+          <div class="absolute top-2 right-2 flex space-x-3">
+            <button class="text-white bg-gray-800 bg-opacity-50 p-2 rounded-full">
+              <i class="fas fa-heart"></i> 
             </button>
-            <button class="text-red-600 hover:text-red-800 flex items-center space-x-1">
-              <icon name="uil:trash-alt" class="w-5 h-5" />
-              <span>Delete</span>
+            <button class="text-white bg-gray-800 bg-opacity-50 p-2 rounded-full">
+              <i class="fas fa-bookmark"></i> 
             </button>
           </div>
         </div>
-      </div>
 
-      <!-- Pagination -->
-      <div v-if="totalPages > 1" class="flex justify-center mt-8">
-        <button
-          @click="goToPage(currentPage - 1)"
-          :disabled="currentPage === 1"
-          class="px-4 py-2 mx-1 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
-        >
-          Previous
-        </button>
-        <span class="px-4 py-2">{{ currentPage }} / {{ totalPages }}</span>
-        <button
-          @click="goToPage(currentPage + 1)"
-          :disabled="currentPage === totalPages"
-          class="px-4 py-2 mx-1 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
-        >
-          Next
-        </button>
-      </div>
-    </main>
+        
+        <div class="p-4">
+          <h3 class="text-lg font-semibold text-gray-800">{{ event.title }}</h3>
+          <p class="text-sm text-gray-600">{{ event.venue }}</p>
+          <p class="text-xs text-gray-500">{{ event.address }}</p>
 
-    <!-- Footer Component -->
-    <footer class="">
-      <Footer />
-    </footer>
+          <!-- Price and Date -->
+          <div class="mt-2 text-sm flex items-center justify-between">
+            <span class="text-lg font-bold text-gray-800">${{ event.price }}</span>
+            <span class="text-xs text-gray-500">{{ new Date(event.date).toLocaleDateString() }}</span>
+          </div>
+
+         
+          <button
+            @click="buyTicket(event.id)"
+            class="w-full mt-4 bg-blue-600 text-white py-2 rounded-lg"
+          >
+            Buy Ticket
+          </button>
+        </div>
+      </div>
+    </div>
+
+    
+    <div class="mt-6 flex justify-center space-x-4">
+      <button
+        @click="changePage(currentPage - 1)"
+        :disabled="currentPage <= 1"
+        class="px-4 py-2 bg-blue-500 text-white rounded-lg disabled:bg-gray-300"
+      >
+        Previous
+      </button>
+      <span class="flex items-center text-lg font-semibold">
+        Page {{ currentPage }} of {{ totalPages }}
+      </span>
+      <button
+        @click="changePage(currentPage + 1)"
+        :disabled="currentPage >= totalPages"
+        class="px-4 py-2 bg-blue-500 text-white rounded-lg disabled:bg-gray-300"
+      >
+        Next
+      </button>
+    </div>
   </div>
+  
+    <Footer />
+  
 </template>
 
 
 
-<style>
-/* Loader animation (optional) */
-.loader,
-.loader:before,
-.loader:after {
-  border-radius: 50%;
-  width: 2.5em;
-  height: 2.5em;
-  animation: load 1.8s infinite ease-in-out;
-}
-.loader {
-  color: #3b82f6;
-  font-size: 10px;
-  position: relative;
-  text-indent: -9999em;
-  transform: translateZ(0);
-  animation-delay: -0.16s;
-}
-.loader:before,
-.loader:after {
-  content: '';
-  position: absolute;
-  top: 0;
-}
-.loader:before {
-  left: -3.5em;
-  animation-delay: -0.32s;
-}
-.loader:after {
-  left: 3.5em;
-}
-@keyframes load {
-  0%,
-  80%,
-  100% {
-    box-shadow: 0 2.5em 0 -1.3em;
-  }
-  40% {
-    box-shadow: 0 2.5em 0 0;
-  }
-}
+<style scoped>
+/* Add custom styles for card hover effects, etc. */
 </style>

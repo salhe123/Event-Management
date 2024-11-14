@@ -1,21 +1,24 @@
-import { useMutation, useQuery } from '@vue/apollo-composable';
+// import { useMutation, useQuery } from '@vue/apollo-composable';
 import gql from 'graphql-tag';
 
 // GraphQL queries and mutations
 const GET_ALL_EVENTS = gql`
-  query GetAllEvents {
-    events {
-      id
-      title
-      venue
-      address
-      price
-      event_date
-      created_at
-      updated_at
-      created_by
-    }
+  query MyQuery {
+  events {
+    address
+    created_at
+    date
+    description
+    id
+    location
+    organizer_id
+    price
+    title
+    updated_at
+    venue
   }
+}
+
 `;
 
 const GET_USER_EVENTS = gql`

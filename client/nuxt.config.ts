@@ -15,7 +15,7 @@ export default defineNuxtConfig({
       collections: ['uil', 'mdi'],
     },
   },
-  css: ["~/assets/css/main.css"],
+  css: ["~/assets/css/main.css",'@fortawesome/fontawesome-free/css/all.css'],
 
   postcss: {
     plugins: {
