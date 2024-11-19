@@ -3,7 +3,7 @@
 
 <template>
 <p>
-    this the test from profile page
+    this the test from profile page and also another 
 </p>
 </template>
 <script>
