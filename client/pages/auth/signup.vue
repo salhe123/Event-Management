@@ -70,7 +70,7 @@ const onSubmit = handleSubmit(async (values) => {
   try {
     const { data } = await mutate(variables);
     console.log("Mutation response:", data);
-    router.push("/auth/login");
+    router.push("/auth/login"); 
   } catch (err) {
     if (err.graphQLErrors && err.graphQLErrors[0]) {
       error.value = err.graphQLErrors[0].message; 

@@ -1,101 +1,125 @@
-<script setup>
-import { ref } from "vue";
-
-const isMenuOpen = ref(false);
-function toggleMenu() {
-  isMenuOpen.value = !isMenuOpen.value;
-}
-</script>
-
 <template>
-  <header
-    class="flex bg-white border-b py-4 sm:px-8 px-6 font-[sans-serif] min-h-[80px] tracking-wide relative z-50"
-  >
-    <div class="flex flex-wrap items-center justify-between w-full">
-      <!-- Logo Section (Link to Home) -->
-      <div class="flex lg:hidden items-center space-x-2">
-        <nuxt-link to="/" class="text-2xl font-semibold text-[#007bff]">My Event App</nuxt-link>
-      </div>
-      <div class="hidden lg:flex items-center space-x-8">
-        <!-- Logo Desktop Version -->
-        <nuxt-link to="/" class="text-2xl font-semibold text-[#007bff]">My Event App</nuxt-link>
+  <header class="bg-white text-gray-800 shadow-md">
+    <div class="container mx-auto flex items-center justify-between p-4">
+      <!-- Logo -->
+      <div class="flex items-center">
+        <img src="../assets/css/image/logo.png" alt="Logo" class="h-10 w-10 mr-2" />
       </div>
 
-      <!-- Search and Filter Section -->
-      <div class="flex-1 flex flex-col lg:flex-row items-center gap-y-4 lg:gap-x-6">
-        <div class="flex items-center w-full lg:w-auto">
-          <div
-            class="flex border-2 focus-within:border-gray-400 rounded-full px-4 lg:px-6 py-2 lg:py-3 overflow-hidden w-full lg:max-w-2xl"
-          >
-            <input
-              type="text"
-              placeholder="Search events..."
-              class="w-full text-sm bg-transparent outline-none pr-2"
-            />
-            <Icon name="search" class="cursor-pointer text-gray-600 w-5 h-5 mr-4" />
-            <div class="h-full w-px bg-gray-300 mx-4"></div>
-            <select class="text-sm bg-transparent outline-none cursor-pointer text-gray-600">
-              <option value="" disabled selected>Filter</option>
-              <option value="all">All</option>
-              <option value="popular">Popular</option>
-              <option value="recent">Recent</option>
-              <option value="recommended">Recommended</option>
-            </select>
+      <!-- Search Engine and Navigation Links -->
+      <div class="flex items-center space-x-4">
+        <!-- Search Bar -->
+        <div class="relative">
+          <input
+            type="text"
+            placeholder="Search..."
+            v-model="searchQuery"
+            class="px-24 py-2 rounded-lg bg-gray-200 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <div v-if="filteredResults.length > 0" class="absolute top-full mt-2 bg-white text-black rounded-lg shadow-lg w-full">
+            <ul>
+              <li
+                v-for="result in filteredResults"
+                :key="result.id"
+                class="px-4 py-2 hover:bg-gray-200 cursor-pointer"
+                @click="selectResult(result)"
+              >
+                {{ result.name }}
+              </li>
+            </ul>
           </div>
         </div>
-        
-        <!-- Action Links Section (Create Event, Login, Sign Up) -->
-        <div class="hidden lg:flex items-center space-x-8">
-          <NuxtLink to="/create-event" class="text-[#333] hover:text-[#007bff] text-[15px] font-semibold">
-            Create Event
-          </NuxtLink>
-          <NuxtLink to="/auth/login" class="flex space-x-4">
-            <button
-              class="px-6 py-2 text-sm rounded-full text-white border-2 border-[#007bff] bg-[#007bff] hover:bg-[#004bff] transition duration-300"
-            >
-              Login
-            </button>
-            <button
-              class="px-6 py-2 text-sm rounded-full text-white border-2 border-[#007bff] bg-[#007bff] hover:bg-[#004bff] transition duration-300"
-            >
-              Sign Up
-            </button>
-          </NuxtLink>
-        </div>
+
+        <!-- Navigation Links on Right Side -->
+        <!-- <router-link to="/" class="hover:text-blue-500">Home</router-link> -->
+        <router-link to="#" class="hover:text-blue-500 pl-20">Create Events</router-link>
       </div>
 
-      <!-- Mobile Menu Toggle (Hamburger Icon) -->
-      <button @click="toggleMenu" class="lg:hidden ml-auto">
-        <Icon name="uil:github" class="w-6 h-6" />
-      </button>
-
-      <!-- Mobile Menu (Dropdown for Small Screens) -->
-      <div
-        v-if="isMenuOpen"
-        class="absolute top-full left-0 w-full bg-white shadow-lg flex flex-col items-center space-y-4 py-6 lg:hidden"
-      >
-        <NuxtLink to="#" class="text-[#333] hover:text-[#007bff] text-[15px] font-semibold">
-          Create Event
-        </NuxtLink>
-        <NuxtLink to="/auth/login" class="w-full text-center">
-          <button
-            class="w-10/12 py-2 text-sm rounded-full text-white border-2 border-[#007bff] bg-[#007bff] hover:bg-[#004bff] transition duration-300"
-          >
-            Login
+      <!-- User Authentication Links -->
+      <div class="flex items-center space-x-4">
+        <router-link v-if="!isAuthenticated" to="/auth/login" class="hover:text-blue-500">
+          Login
+        </router-link>
+        <router-link v-if="!isAuthenticated" to="/auth/signup" class="hover:text-blue-500">
+          Sign Up
+        </router-link>
+        <div v-else class="relative">
+          <button class="flex items-center space-x-2 focus:outline-none" @click="toggleDropdown">
+            <span class="text-gray-800">{{ user.email }}</span>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
           </button>
-        </NuxtLink>
-        <NuxtLink to="/auth/signup" class="w-full text-center">
-          <button
-            class="w-10/12 py-2 text-sm rounded-full text-white border-2 border-[#007bff] bg-[#007bff] hover:bg-[#004bff] transition duration-300"
+          <ul
+            v-if="dropdownOpen"
+            class="absolute right-0 mt-2 bg-white text-gray-800 rounded-lg shadow-lg py-2 w-40"
           >
-            Sign Up
-          </button>
-        </NuxtLink>
+            <li class="px-4 py-2 hover:bg-gray-200 cursor-pointer" @click="goToProfile">
+              Profile
+            </li>
+            <li class="px-4 py-2 hover:bg-gray-200 cursor-pointer" @click="logout">
+              Logout
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
   </header>
 </template>
 
+<script setup>
+import { ref, computed } from 'vue';
+import { useAuthStore } from '~/stores/authStore';
+import { useRouter } from 'vue-router';
+
+const authStore = useAuthStore();
+const router = useRouter();
+
+// States
+const dropdownOpen = ref(false);
+const searchQuery = ref('');
+const results = ref([
+  { id: 1, name: 'Event A' },
+  { id: 2, name: 'Event B' },
+  { id: 3, name: 'Event C' },
+]);
+
+// Computed States
+const isAuthenticated = authStore.isAuthenticated;
+const user = authStore.user;
+
+// Watch for search filtering
+const filteredResults = computed(() => {
+  if (!searchQuery.value) return [];
+  return results.value.filter((result) =>
+    result.name.toLowerCase().includes(searchQuery.value.toLowerCase())
+  );
+});
+
+// Actions
+const toggleDropdown = () => {
+  dropdownOpen.value = !dropdownOpen.value;
+};
+
+const logout = () => {
+  authStore.logout();
+  dropdownOpen.value = false;
+  router.push('/');
+};
+
+const goToProfile = () => {
+  router.push('/profile');
+  dropdownOpen.value = false;
+};
+
+const selectResult = (result) => {
+  router.push(`/events/${result.id}`);
+  searchQuery.value = '';
+};
+</script>
+
 <style scoped>
-/* Optional: Add additional styling for header elements like hover effects */
+.container {
+  max-width: 1200px;
+}
 </style>

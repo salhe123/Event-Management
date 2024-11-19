@@ -72,34 +72,32 @@ const paginatedEvents = computed(() => {
     <Header />
   </div>
   <div class="container mx-auto p-4">
-  
-    
+    <!-- Events Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
       <!-- Loop through Events -->
       <div
         v-for="event in paginatedEvents"
         :key="event.id"
-        class="bg-white border rounded-lg shadow-lg overflow-hidden"
+        class="bg-white border rounded-lg shadow-lg overflow-hidden transform hover:scale-105 transition-transform duration-300"
       >
-       
+        <!-- Event Image with Actions -->
         <div class="relative">
           <img
-            src="https://via.placeholder.com/300x200"  
+            src="https://via.placeholder.com/300x200"
             alt="Event"
-            class="w-full h-48 object-cover"
+            class="w-full h-48 object-cover rounded-t-lg"
           />
-          
           <div class="absolute top-2 right-2 flex space-x-3">
-            <button class="text-white bg-gray-800 bg-opacity-50 p-2 rounded-full">
-              <i class="fas fa-heart"></i> 
+            <button class="text-white bg-gray-800 bg-opacity-50 p-2 rounded-full hover:bg-opacity-75 transition-colors duration-200">
+              <i class="fas fa-heart"></i>
             </button>
-            <button class="text-white bg-gray-800 bg-opacity-50 p-2 rounded-full">
-              <i class="fas fa-bookmark"></i> 
+            <button class="text-white bg-gray-800 bg-opacity-50 p-2 rounded-full hover:bg-opacity-75 transition-colors duration-200">
+              <i class="fas fa-bookmark"></i>
             </button>
           </div>
         </div>
 
-        
+        <!-- Event Content -->
         <div class="p-4">
           <h3 class="text-lg font-semibold text-gray-800">{{ event.title }}</h3>
           <p class="text-sm text-gray-600">{{ event.venue }}</p>
@@ -111,10 +109,9 @@ const paginatedEvents = computed(() => {
             <span class="text-xs text-gray-500">{{ new Date(event.date).toLocaleDateString() }}</span>
           </div>
 
-         
           <button
             @click="buyTicket(event.id)"
-            class="w-full mt-4 bg-blue-600 text-white py-2 rounded-lg"
+            class="w-full mt-4 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors duration-300"
           >
             Buy Ticket
           </button>
@@ -122,34 +119,63 @@ const paginatedEvents = computed(() => {
       </div>
     </div>
 
-    
+    <!-- Pagination -->
     <div class="mt-6 flex justify-center space-x-4">
       <button
         @click="changePage(currentPage - 1)"
         :disabled="currentPage <= 1"
-        class="px-4 py-2 bg-blue-500 text-white rounded-lg disabled:bg-gray-300"
+        class="px-4 py-2 bg-blue-500 text-white rounded-lg disabled:bg-gray-300 hover:bg-blue-600 transition-colors duration-300"
       >
-        Previous
+        PP
       </button>
-      <span class="flex items-center text-lg font-semibold">
+      <span class="flex items-center ">
         Page {{ currentPage }} of {{ totalPages }}
       </span>
       <button
         @click="changePage(currentPage + 1)"
         :disabled="currentPage >= totalPages"
-        class="px-4 py-2 bg-blue-500 text-white rounded-lg disabled:bg-gray-300"
+        class="px-4 py-2 bg-blue-500 text-white rounded-lg disabled:bg-gray-300 hover:bg-blue-600 transition-colors duration-300"
       >
-        Next
+        NP
       </button>
     </div>
   </div>
-  
-    <Footer />
-  
+
+  <Footer />
 </template>
 
-
-
 <style scoped>
-/* Add custom styles for card hover effects, etc. */
+/* Custom Styles */
+.container {
+  max-width: 1200px;
+}
+
+/* Hover effects */
+.grid div:hover {
+  transform: scale(1.05);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+button:hover {
+  background-color: #3498db;
+  transition: background-color 0.3s ease;
+}
+
+button:disabled {
+  background-color: #ccc;
+}
+
+button:disabled:hover {
+  cursor: not-allowed;
+}
+
+/* Responsive Image */
+img {
+  transition: transform 0.3s ease-in-out;
+}
+
+img:hover {
+  transform: scale(1.05);
+}
 </style>
+
