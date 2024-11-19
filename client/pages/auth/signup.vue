@@ -3,19 +3,13 @@ import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { useField, useForm, ErrorMessage, Field } from "vee-validate";
 import * as yup from "yup";
-import { useMutation } from "@vue/apollo-composable";
-// import gql from 'graphql-tag';
 
 // Validation schema
 const schema = yup.object({
-  first_name: yup
+  username: yup
     .string()
     .min(3, "First name must be at least 3 characters")
-    .required("Please enter your first name"),
-  last_name: yup
-    .string()
-    .min(3, "Last name must be at least 3 characters")
-    .required("Please enter your last name"),
+    .required("Please enter your username"),
   email: yup
     .string()
     .email("Please enter a valid email")
@@ -38,29 +32,15 @@ const router = useRouter();
 const { handleSubmit } = useForm({
   validationSchema: schema,
 });
-
-const { value: first_name } = useField("first_name");
-const { value: last_name } = useField("last_name");
 const { value: email } = useField("email");
 const { value: password } = useField("password");
+const { value: username } = useField("username");
 const { value: confirmPassword } = useField("confirmPassword");
 
 // Define the GraphQL mutation
 const SIGNUP_MUTATION = gql`
-  mutation (
-    $first_name: String!
-    $last_name: String!
-    $email: String!
-    $password: String!
-  ) {
-    insert_users_one(
-      object: {
-        first_name: $first_name
-        last_name: $last_name
-        email: $email
-        password: $password
-      }
-    ) {
+  mutation MyMutation($email: String!, $password: String!, $username: String!) {
+    signup(email: $email, password: $password, username: $username) {
       id
     }
   }
@@ -72,10 +52,10 @@ const onSubmit = handleSubmit(async (values) => {
 
   // Prepare the variables to match the input structure defined in the mutation
   const variables = {
-    first_name: values.first_name,
-    last_name: values.last_name,
     email: values.email,
     password: values.password,
+    username: values.username,
+ 
   };
 
   const { mutate } = useMutation(SIGNUP_MUTATION, {
@@ -90,14 +70,15 @@ const onSubmit = handleSubmit(async (values) => {
   try {
     const { data } = await mutate(variables);
     console.log("Mutation response:", data);
-    router.push("/auth/login"); // Redirect after successful signup
+    router.push("/auth/login");
   } catch (err) {
     if (err.graphQLErrors && err.graphQLErrors[0]) {
-      error.value = err.graphQLErrors[0].message; // Display specific GraphQL error message
+      error.value = err.graphQLErrors[0].message; 
     } else {
       error.value = "An error occurred during signup";
     }
   }
+  
 });
 </script>
 
@@ -122,50 +103,29 @@ const onSubmit = handleSubmit(async (values) => {
             {{ error }}
           </div>
 
-          <!-- First and Last Name Row -->
-          <div class="flex gap-4">
+          
+          
             <div class="relative w-1/2">
               <label
-                for="first_name"
+                for="username"
                 class="block text-gray-600 text-sm font-bold mb-2"
-                >First Name</label
+                >username</label
               >
               <Field
-                name="first_name"
+                name="username"
                 type="text"
-                placeholder="First name"
+                placeholder="username"
                 class="w-full p-1 pl-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-100 text-gray-800"
               />
               <ErrorMessage
-                name="first_name"
+                name="username"
                 class="text-red-500 text-sm italic"
               />
               <span class="absolute inset-y-0 left-0 pl-3 flex items-center">
                 <i class="fas fa-user text-gray-400"></i>
               </span>
             </div>
-
-            <div class="relative w-1/2">
-              <label
-                for="last_name"
-                class="block text-gray-600 text-sm font-bold mb-2"
-                >Last Name</label
-              >
-              <Field
-                name="last_name"
-                type="text"
-                placeholder="Last name"
-                class="w-full p-1 pl-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-100 text-gray-800"
-              />
-              <ErrorMessage
-                name="last_name"
-                class="text-red-500 text-sm italic"
-              />
-              <span class="absolute inset-y-0 left-0 pl-3 flex items-center">
-                <i class="fas fa-user text-gray-400"></i>
-              </span>
-            </div>
-          </div>
+          
 
           <div class="relative">
             <label

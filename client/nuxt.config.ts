@@ -8,7 +8,7 @@ export default defineNuxtConfig({
     HASURA_ADMIN_SECRET: process.env.HASURA_ADMIN_SECRET,
   },
 
-  modules: ['@nuxtjs/apollo', '@nuxt/icon'],
+  modules: ['@nuxtjs/apollo', '@nuxt/icon','@pinia/nuxt'],
   devtools: { enabled: true },
   icon: {
     serverBundle: {
@@ -39,6 +39,8 @@ export default defineNuxtConfig({
       },
     },
   },
+
+ 
 
   compatibilityDate: '2024-08-28',
 });
