@@ -2,7 +2,9 @@
 
 
 <template>
-
+<p>
+    this the test from profile page
+</p>
 </template>
 <script>
 
