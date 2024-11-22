@@ -1,4 +1,7 @@
 import { defineNuxtConfig } from "nuxt/config";
+import path from "path";
+
+const __dirname = path.resolve();
 
 export default defineNuxtConfig({
   runtimeConfig: {
@@ -8,13 +11,21 @@ export default defineNuxtConfig({
     HASURA_ADMIN_SECRET: process.env.HASURA_ADMIN_SECRET,
   },
 
-  modules: ["@nuxtjs/apollo", "@nuxt/icon",  '@pinia/nuxt'],
+  modules: ["@nuxtjs/apollo", "@nuxt/icon", '@pinia/nuxt'],
+  
+  imports: {
+    dirs: ["./stores"], // Automatically import stores
+    autoImport: true, // Automatically import Pinia composables
+  },
+
   devtools: { enabled: true },
+
   icon: {
     serverBundle: {
       collections: ["uil", "mdi"],
     },
   },
+
   css: ["~/assets/css/main.css", "@fortawesome/fontawesome-free/css/all.css"],
 
   postcss: {
@@ -23,6 +34,8 @@ export default defineNuxtConfig({
       autoprefixer: {},
     },
   },
+
+  plugins: ["@/plugins/auth.ts"],
 
   apollo: {
     clients: {
@@ -44,6 +57,10 @@ export default defineNuxtConfig({
         },
       },
     },
+  },
+
+  alias: {
+    "@": path.resolve(__dirname, "./"), // Resolve paths relative to __dirname
   },
 
   compatibilityDate: "2024-08-28",

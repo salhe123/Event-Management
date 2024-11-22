@@ -59,13 +59,12 @@ const onSubmit = handleSubmit(async (values) => {
   };
 
   const { mutate } = useMutation(SIGNUP_MUTATION, {
-    variables,
-    context: {
-      Headers: {
-        "Content-Type": "application/json",
-      },
+  context: {
+    headers: {
+      "Content-Type": "application/json",
     },
-  });
+  },
+});
 
   try {
     const { data } = await mutate(variables);

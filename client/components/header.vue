@@ -31,18 +31,20 @@
         </div>
 
         <!-- Navigation Links on Right Side -->
-        <!-- <router-link to="/" class="hover:text-blue-500">Home</router-link> -->
         <router-link to="#" class="hover:text-blue-500 pl-20">Create Events</router-link>
       </div>
 
       <!-- User Authentication Links -->
       <div class="flex items-center space-x-4">
+        <!-- Show Login and Sign Up only if not authenticated -->
         <router-link v-if="!isAuthenticated" to="/auth/login" class="hover:text-blue-500">
           Login
         </router-link>
         <router-link v-if="!isAuthenticated" to="/auth/signup" class="hover:text-blue-500">
           Sign Up
         </router-link>
+
+        <!-- Show Profile Dropdown if authenticated -->
         <div v-else class="relative">
           <button class="flex items-center space-x-2 focus:outline-none" @click="toggleDropdown">
             <span class="text-gray-800">{{ user.email }}</span>
@@ -68,7 +70,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useAuthStore } from '~/stores/authStore';
 import { useRouter } from 'vue-router';
 
@@ -85,8 +87,8 @@ const results = ref([
 ]);
 
 // Computed States
-const isAuthenticated = authStore.isAuthenticated;
-const user = authStore.user;
+const isAuthenticated = computed(() => !!authStore.getToken);
+const user = computed(() => authStore.getUser);
 
 // Watch for search filtering
 const filteredResults = computed(() => {
@@ -102,18 +104,18 @@ const toggleDropdown = () => {
 };
 
 const logout = () => {
-  authStore.logout();
+  authStore.clearAuth();
   dropdownOpen.value = false;
   router.push('/');
 };
 
 const goToProfile = () => {
-  router.push('/profile');
+  router.push('/profile');  // Modify the route to your profile page
   dropdownOpen.value = false;
 };
 
 const selectResult = (result) => {
-  router.push(`/events/${result.id}`);
+  router.push(`/events/${result.id}`);  // Modify according to your route setup
   searchQuery.value = '';
 };
 </script>

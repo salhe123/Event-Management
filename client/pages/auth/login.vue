@@ -34,8 +34,13 @@ const LOGIN_MUTATION = gql`
   }
 `;
 
-// Define Apollo mutation
-const { mutate: login, onDone, onError } = useMutation(LOGIN_MUTATION);
+const { mutate: login } = useMutation(LOGIN_MUTATION, {
+  context: {
+    headers: {
+      "Content-Type": "application/json",
+    },
+  },
+});
 
 // Login handler
 const onSubmit = handleSubmit(async (values) => {
@@ -67,8 +72,8 @@ const onSubmit = handleSubmit(async (values) => {
       router.push('/auth/signup'); // Fallback route
     }
   } catch (err) {
-    error.value = 'Login failed. Please check your credentials.';
-    console.error('Error during login:', err);
+    error.value = err.graphQLErrors?.[0]?.message || 'An unexpected error occurred.';
+
   }
 });
 
@@ -96,7 +101,8 @@ const onSubmit = handleSubmit(async (values) => {
               placeholder="Enter your email"
               class="w-full p-2 pl-3 border border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-800 text-white"
             />
-            <span class="text-red-500"><ErrorMessage name="email" /></span>
+            <ErrorMessage name="email" class="text-red-500 text-sm italic" />
+
           </div>
 
           <!-- Password input -->
