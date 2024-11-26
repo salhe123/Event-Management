@@ -1,0 +1,34 @@
+table:
+  name: followers
+  schema: public
+insert_permissions:
+  - role: user
+    permission:
+      check:
+        user_id:
+          _eq: X-Hasura-User-Id
+      columns:
+        - event_id
+        - id
+        - user_id
+        - followed_at
+    comment: ""
+select_permissions:
+  - role: user
+    permission:
+      columns:
+        - event_id
+        - id
+        - user_id
+        - followed_at
+      filter:
+        user_id:
+          _eq: X-Hasura-User-Id
+    comment: ""
+delete_permissions:
+  - role: user
+    permission:
+      filter:
+        user_id:
+          _eq: X-Hasura-User-Id
+    comment: ""

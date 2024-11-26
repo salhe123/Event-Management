@@ -1,0 +1,42 @@
+table:
+  name: transactions
+  schema: public
+insert_permissions:
+  - role: user
+    permission:
+      check:
+        user_id:
+          _eq: X-Hasura-User-Id
+      columns:
+        - phonenumber
+        - event_id
+        - id
+        - user_id
+        - amount
+        - checkout_url
+        - tx_rf
+        - created_at
+    comment: ""
+select_permissions:
+  - role: user
+    permission:
+      columns:
+        - phonenumber
+        - event_id
+        - id
+        - user_id
+        - amount
+        - checkout_url
+        - tx_rf
+        - created_at
+      filter:
+        user_id:
+          _eq: X-Hasura-User-Id
+    comment: ""
+delete_permissions:
+  - role: user
+    permission:
+      filter:
+        user_id:
+          _eq: X-Hasura-User-Id
+    comment: ""

@@ -1,0 +1,44 @@
+actions:
+  - name: acceptPayment
+    definition:
+      kind: synchronous
+      handler: http://172.17.0.1:5000/PaymentHandler
+    comment: PaymentHandler
+  - name: login
+    definition:
+      kind: synchronous
+      handler: http://172.17.0.1:5000/login
+    comment: login
+  - name: signup
+    definition:
+      kind: synchronous
+      handler: http://172.17.0.1:5000/signup
+      timeout: 5
+    comment: signup
+  - name: uploadImages
+    definition:
+      kind: synchronous
+      handler: http://172.17.0.1:5000/uploadImages
+    comment: uploadImages
+custom_types:
+  enums: []
+  input_objects:
+    - name: SignupInput
+    - name: LoginInput
+    - name: ImageUploadInput
+    - name: signupArgs
+    - name: loginArgs
+    - name: ImageInput
+  objects:
+    - name: SignupOutput
+    - name: LoginOutput
+    - name: ImageUploadOutput
+    - name: signupOutput
+    - name: EventImage
+    - name: Event
+    - name: Output
+    - name: PaymentOutput
+    - name: PayOutput
+    - name: ImageUploadResponse
+  scalars:
+    - name: Upload

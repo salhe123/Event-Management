@@ -1,0 +1,117 @@
+type Mutation {
+  acceptPayment(
+    phoneNumber: String!
+    amount: String!
+  ): PayOutput!
+}
+
+type Mutation {
+  login(
+    email: String!
+    password: String!
+  ): LoginOutput
+}
+
+type Mutation {
+  signup(
+    email: String!
+    password: String!
+    username: String!
+  ): signupOutput
+}
+
+type Mutation {
+  uploadImages(
+    base64_strs: [String!]!
+  ): ImageUploadResponse
+}
+
+input SignupInput {
+  first_name: String!
+  last_name: String!
+  email: String!
+  password: String!
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+input ImageUploadInput {
+  event_id: uuid!
+  images: [ImageInput!]!
+}
+
+input signupArgs {
+  email: String!
+  password: String!
+  username: String!
+}
+
+input loginArgs {
+  email: String!
+  password: String!
+}
+
+input ImageInput {
+  image_url: String!
+  is_featured: Boolean
+}
+
+type SignupOutput {
+  id: ID!
+  message: String
+}
+
+type LoginOutput {
+  id: uuid!
+  token: String
+  role: String
+}
+
+type ImageUploadOutput {
+  urls: [String!]!
+  cover_photo: String!
+}
+
+type signupOutput {
+  id: uuid!
+  message: String!
+}
+
+type EventImage {
+  id: uuid!
+  event_id: uuid!
+  image_url: String!
+  is_featured: Boolean
+  created_at: timestamptz!
+}
+
+type Event {
+  id: uuid!
+  image: [String!]!
+  featured_image_url: String
+}
+
+type Output {
+  file_path: String!
+}
+
+type PaymentOutput {
+  paymentIntentId: String!
+  clientSecret: String!
+}
+
+type PayOutput {
+  message: String
+  checkoutUrl: String
+  tx_ref: String
+}
+
+type ImageUploadResponse {
+  urls: [String!]
+}
+
+scalar Upload
+

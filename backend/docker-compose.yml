@@ -1,73 +1,55 @@
-version: "3.8"
+
 
 services:
-  database:
-    image: postgres:16
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: mydatabase
-    volumes:
-      - minabtest:/var/lib/postgresql/data
-    networks:
-      - minabnetwork
+  postgres:
+    image: postgres:15
     restart: always
-    container_name: database
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user -d mydatabase"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  hasura:
-    image: hasura/graphql-engine:v2.23.0
+    volumes:
+      - db_data:/var/lib/postgresql/data
     environment:
-      HASURA_GRAPHQL_DATABASE_URL: postgres://user:password@database:5432/mydatabase
-      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
-      HASURA_GRAPHQL_DEV_MODE: "true"
-      HASURA_GRAPHQL_UNAUTHORIZED_ROLE: "anonymous"
-      HASURA_GRAPHQL_ADMIN_SECRET: "${ADMIN_SECRET_KEY}" 
-      HASURA_GRAPHQL_CORS_ORIGIN: "http://localhost:3000"
-      # HASURA_GRAPHQL_JWT_SECRET: '{ "type": "HS256", "key": "${JWT_SECRET_KEY}" }'  # Use env variable
+      POSTGRES_PASSWORD: postgrespassword
+
+  graphql-engine:
+    image: hasura/graphql-engine:v2.42.0
     ports:
       - "8080:8080"
-    depends_on:
-      database:
-        condition: service_healthy
-    networks:
-      - minabnetwork
     restart: always
-    container_name: hasura
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/healthz || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  my-go:
-    build:
-      context: ./go
-      dockerfile: Dockerfile
     environment:
-      HASURA_GRAPHQL_URL: http://hasura:8080/v1/graphql
-      # ADMIN_URL: "${ADMIN_URL}"  # Add ADMIN_URL if needed
-    volumes:
-      - ./go/.env:/app/.env  # Correct path to .env
-    ports:
-      - "7070:7070"
+      ## postgres database to store Hasura metadata
+      HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://postgres:postgrespassword@postgres:5432/postgres
+      PG_DATABASE_URL: postgres://postgres:postgrespassword@postgres:5432/postgres
+      ## enable the console served by server
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true" # set to "false" to disable console
+      ## enable debugging mode. It is recommended to disable this in production
+      HASURA_GRAPHQL_DEV_MODE: "true"
+      HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
+      ## uncomment next line to run console offline (i.e load console assets from server instead of CDN)
+      # HASURA_GRAPHQL_CONSOLE_ASSETS_DIR: /srv/console-assets
+      ## uncomment next line to set an admin secret
+      ##HASURA_GRAPHQL_ADMIN_SECRET: ibnuseid27
+      ACTION_BASE_URL: http://localhost:5000
+      HASURA_GRAPHQL_METADATA_DEFAULTS: '{"backend_configs":{"dataconnector":{"athena":{"uri":"http://data-connector-agent:8081/api/v1/athena"},"mariadb":{"uri":"http://data-connector-agent:8081/api/v1/mariadb"},"mysql8":{"uri":"http://data-connector-agent:8081/api/v1/mysql"},"oracle":{"uri":"http://data-connector-agent:8081/api/v1/oracle"},"snowflake":{"uri":"http://data-connector-agent:8081/api/v1/snowflake"}}}}'
     depends_on:
-      database:
+      data-connector-agent:
         condition: service_healthy
-      hasura:
-        condition: service_healthy
-    networks:
-      - minabnetwork
+
+  data-connector-agent:
+    image: hasura/graphql-data-connector:v2.42.0
     restart: always
-    container_name: my-go  # Change container name to my-go
+    ports:
+      - 8081:8081
+    environment:
+      QUARKUS_LOG_LEVEL: ERROR
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/api/v1/athena/health"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+      start_period: 5s
 
 volumes:
-  minabtest:
+  db_data:
 
 networks:
-  minabnetwork:
-    driver: bridge
+  backend-network:
+    name: backend-network
