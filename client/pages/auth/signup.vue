@@ -1,237 +1,138 @@
 <script setup>
-import { ref } from "vue";
-import { useRouter } from "vue-router";
-import { useField, useForm, ErrorMessage, Field } from "vee-validate";
-import * as yup from "yup";
+definePageMeta({
+  middleware: "after-log"
+});
 
-// Validation schema
+import { Form, Field, ErrorMessage, useForm } from "vee-validate";
+import * as yup from "yup";
+import { ref } from "vue";
+import Eye from "../../assets/icons/Eye.vue";
+import { useMutation } from "@vue/apollo-composable";
+// import gql from "graphql-tag";
+import { useRouter } from "vue-router";
+import { REGISTER_USER_MUTATION } from "../../util/queries";
+
+const router = useRouter();
+const { resetForm, setErrors } = useForm();
+
+// Validation schema using yup
 const schema = yup.object({
-  username: yup
-    .string()
-    .min(3, "First name must be at least 3 characters")
-    .required("Please enter your username"),
-  email: yup
-    .string()
-    .email("Please enter a valid email")
-    .required("Please enter your email"),
+  username: yup.string().required("User name is required"),
+  email: yup.string().required("The email must not be empty").email("Invalid email address"),
   password: yup
     .string()
-    .min(5, "Password must be at least 5 characters")
-    .required("Please enter your password"),
-  confirmPassword: yup
-    .string()
-    .oneOf([yup.ref("password")], "Passwords must match")
-    .required("Please confirm your password"),
+    .required("The password is required")
+    .min(5, "The password must contain at least 5 characters")
+    .max(10, "The password can contain at most 10 characters")
 });
 
-const showPassword = ref(false);
-const showConfirmPassword = ref(false);
-const error = ref("");
-const router = useRouter();
+const alertMessage = ref("");
+const alertVisible = ref(false);
+const alertType = ref("success");
 
-const { handleSubmit } = useForm({
-  validationSchema: schema,
-});
-const { value: email } = useField("email");
-const { value: password } = useField("password");
-const { value: username } = useField("username");
-const { value: confirmPassword } = useField("confirmPassword");
+const showAlert = (message, type = "success") => {
+  alertMessage.value = message;
+  alertType.value = type;
+  alertVisible.value = true;
 
-// Define the GraphQL mutation
-const SIGNUP_MUTATION = gql`
-  mutation MyMutation($email: String!, $password: String!, $username: String!) {
-    signup(email: $email, password: $password, username: $username) {
-      id
-    }
-  }
-`;
+  setTimeout(() => {
+    alertVisible.value = false;
+  }, 2000);
+};
 
-// Handle form submission
-const onSubmit = handleSubmit(async (values) => {
-  console.log("Submitted values:", values);
+const { mutate: registerUser } = useMutation(REGISTER_USER_MUTATION);
 
-  // Prepare the variables to match the input structure defined in the mutation
-  const variables = {
-    email: values.email,
-    password: values.password,
-    username: values.username,
- 
-  };
-
-  const { mutate } = useMutation(SIGNUP_MUTATION, {
-  context: {
-    headers: {
-      "Content-Type": "application/json",
-    },
-  },
-});
-
-  try {
-    const { data } = await mutate(variables);
-    console.log("Mutation response:", data);
-    router.push("/auth/login"); 
-  } catch (err) {
-    if (err.graphQLErrors && err.graphQLErrors[0]) {
-      error.value = err.graphQLErrors[0].message; 
-    } else {
-      error.value = "An error occurred during signup";
-    }
-  }
+const userData = ref({
   
+  email: "",
+  password: "",
+  username: "",
 });
+
+const togglePassword = ref(false);
+const successMessage = ref("");
+
+const showPassword = () => {
+  togglePassword.value = !togglePassword.value;
+};
+
+const signupRegister = async () => {
+  try {
+    const { data } = await registerUser({
+      email: userData.value.email,
+      password: userData.value.password,
+      username: userData.value.username
+    });
+
+    if (data && data.signup) {
+      successMessage.value = data.signup.message;
+      showAlert(data.signup.message, "success");
+      resetForm();
+      router.push("/auth/login");
+    } else {
+      console.error("No response from server");
+    }
+  } catch (error) {
+    showAlert("Registration Error", "error");
+  }
+};
+
+
 </script>
 
 <template>
-  <div
-    class="flex justify-center items-center min-h-screen bg-gradient-to-br from-blue-300 via-indigo-200 to-purple-300 p-4"
-  >
-    <div
-      class="flex flex-col md:flex-row w-full max-w-4xl bg-gray-200 rounded-lg shadow-lg overflow-hidden"
-    >
-      <!-- Form Section -->
-      <div class="w-full md:w-1/2 p-8">
-        <form @submit.prevent="onSubmit" class="space-y-6">
-          <h2 class="text-3xl font-bold text-center text-white">
-            Create Your Account
-          </h2>
+  <div class="flex flex-col min-h-screen bg-gray-100 justify-center items-center">
+    <AlertMessage :message="alertMessage" :type="alertType" :visible="alertVisible" />
 
-          <div
-            v-if="error"
-            class="text-lg font-semibold text-center text-red-500"
-          >
-            {{ error }}
-          </div>
+    <Form @submit="signupRegister" :validation-schema="schema" class="flex flex-col justify-center items-center w-full max-w-md p-6 bg-white rounded-lg">
+      <h1 class="font-bold text-2xl mb-4 text-gray-800">SignUp Page</h1>
 
-          
-          
-            <div class="relative w-1/2">
-              <label
-                for="username"
-                class="block text-gray-600 text-sm font-bold mb-2"
-                >username</label
-              >
-              <Field
-                name="username"
-                type="text"
-                placeholder="username"
-                class="w-full p-1 pl-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-100 text-gray-800"
-              />
-              <ErrorMessage
-                name="username"
-                class="text-red-500 text-sm italic"
-              />
-              <span class="absolute inset-y-0 left-0 pl-3 flex items-center">
-                <i class="fas fa-user text-gray-400"></i>
-              </span>
-            </div>
-          
-
-          <div class="relative">
-            <label
-              for="email"
-              class="block text-gray-600 text-sm font-bold mb-2"
-              >Email</label
-            >
-            <Field
-              name="email"
-              type="email"
-              placeholder="Enter your email"
-              class="w-full p-1 pl-3 border border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-800 text-white"
-            />
-            <ErrorMessage name="email" class="text-red-500 text-sm italic" />
-            <span class="absolute inset-y-0 left-0 pl-3 flex items-center">
-              <i class="fas fa-envelope text-gray-400"></i>
-            </span>
-          </div>
-
-          <div class="relative">
-            <label
-              for="password"
-              class="block text-gray-600 text-sm font-bold mb-2"
-              >Password</label
-            >
-            <Field
-              name="password"
-              :type="showPassword ? 'text' : 'password'"
-              placeholder="Password"
-              class="w-full p-1 pl-3 border border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-800 text-white"
-            />
-            <button
-              type="button"
-              @click="showPassword = !showPassword"
-              class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-200"
-            >
-              <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
-            </button>
-            <ErrorMessage name="password" class="text-red-500 text-sm italic" />
-            <span class="absolute inset-y-0 left-0 pl-3 flex items-center">
-              <i class="fas fa-lock text-gray-400"></i>
-            </span>
-          </div>
-
-          <div class="relative">
-            <label
-              for="confirmPassword"
-              class="block text-gray-600 text-sm font-bold mb-2"
-              >Confirm Password</label
-            >
-            <Field
-              name="confirmPassword"
-              :type="showConfirmPassword ? 'text' : 'password'"
-              placeholder="Confirm your password"
-              class="w-full p-3 pl-3 border border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-800 text-white"
-            />
-            <button
-              type="button"
-              @click="showConfirmPassword = !showConfirmPassword"
-              class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-200"
-            >
-              <i
-                :class="showConfirmPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"
-              ></i>
-            </button>
-            <ErrorMessage
-              name="confirmPassword"
-              class="text-red-500 text-sm italic"
-            />
-            <span class="absolute inset-y-0 left-0 pl-3 flex items-center">
-              <i class="fas fa-lock text-gray-400"></i>
-            </span>
-          </div>
-
-          <button
-            type="submit"
-            class="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg font-bold shadow-lg transform transition-all duration-300 hover:scale-105"
-          >
-            Sign Up
-          </button>
-
-          <!-- Already have an account? -->
-          <div class="text-center mt-4 text-gray-700">
-            <nuxt-link
-              to="/auth/login"
-              class="text-blue-600 hover:text-blue-800 font-medium"
-            >
-              Already have an account? Log in here.
-            </nuxt-link>
-          </div>
-        </form>
-      </div>
-
-      <!-- Image Section -->
-      <div
-        class="w-full md:w-1/2 hidden md:flex items-center justify-center bg-gray-200"
-      >
-        <img
-          src="../../assets/css/image/logo.png"
-          alt="Create Account Illustration"
-          class="w-full h-full object-cover"
+      <div class="flex flex-col w-full mb-4">
+        <label class="font-semibold text-gray-600 mb-2">User Name</label>
+        <Field 
+          type="text" 
+          name="username"
+          v-model="userData.username" 
+          placeholder="Enter user name" 
+          class="p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
+        <ErrorMessage name="username" class="text-red-500 text-sm" />
       </div>
-    </div>
+
+      <div class="flex flex-col w-full mb-4">
+        <label class="font-semibold text-gray-600 mb-2">Email</label>
+        <Field 
+          type="text" 
+          name="email"
+          v-model="userData.email" 
+          placeholder="Enter email" 
+          class="p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        />
+        <ErrorMessage name="email" class="text-red-500 text-sm" />
+      </div>
+
+      <div class="flex flex-col w-full mb-4 relative">
+        <label class="font-semibold text-gray-600 mb-2">Password</label>
+        <Field 
+          :type="togglePassword ? 'text' : 'password'"
+          name="password"
+          v-model="userData.password" 
+          placeholder="Enter password" 
+          class="p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        />
+        <ErrorMessage name="password" class="text-red-500 text-sm" />
+        <Eye class="absolute top-10 right-2 cursor-pointer" @click="showPassword">
+          {{ togglePassword ? 'Hide' : 'Show' }}
+        </Eye>
+      </div>
+
+      <button 
+        type="submit" 
+        class="w-full py-2 px-4 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+      >
+        Signup
+      </button>
+      <p class="font-semibold p-3 text-left">Do You have an account?<NuxtLink to="/auth/login" class="text-blue-600">Login</NuxtLink></p>
+    </Form>
   </div>
 </template>
-
-<style scoped>
-/* Add any additional styling here if necessary */
-</style>

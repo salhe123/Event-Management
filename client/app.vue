@@ -1,9 +1,9 @@
+import { NuxtLayout, NuxtPage, NuxtLoadingIndicator } from './.nuxt/components';
 <template>
-   <div>
-  
-  <!-- This is where the routed page will be rendered -->
-  <NuxtPage />
-</div>
+  <div>
+   <NuxtLayout>
+    <NuxtPage/>
+   </NuxtLayout>
+   
+  </div>
 </template>
- 
-

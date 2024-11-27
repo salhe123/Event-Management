@@ -11,8 +11,14 @@ export default defineNuxtConfig({
     HASURA_ADMIN_SECRET: process.env.HASURA_ADMIN_SECRET,
   },
 
-  modules: ["@nuxtjs/apollo", "@nuxt/icon", '@pinia/nuxt'],
-  
+  modules: [
+    "@nuxtjs/apollo",
+    "@nuxt/icon",
+    "@pinia/nuxt",
+    // "vuetify-nuxt-module",
+    // "@vueuse/core",
+  ],
+
   imports: {
     dirs: ["./stores"], // Automatically import stores
     autoImport: true, // Automatically import Pinia composables

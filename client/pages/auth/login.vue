@@ -1,149 +1,143 @@
 <script setup>
-import { useAuthStore } from '~/stores/authStore';
+
+
+import { Form, Field, ErrorMessage, useForm } from "vee-validate";
+
+import * as yup from 'yup'; 
 import { ref } from 'vue';
-import { useField, useForm } from 'vee-validate';
-import * as yup from 'yup';
+import { useMutation } from '@vue/apollo-composable';
+import Eye from "../../assets/icons/Eye.vue";
+import { useRouter } from 'vue-router';
+import { getUserIdFromToken } from "../../util/util";
+import { LOGIN_MUTATION } from "../../util/queries";
 
-// Define schema
-const schema = yup.object({
-  email: yup.string().email('Enter a valid email').required('Email is required'),
-  password: yup.string().required('Password is required'),
+definePageMeta({
+  middleware: "after-log"
 });
 
-// Define state and router
-const authStore = useAuthStore();
+const alertMessage = ref('');
+const alertVisible = ref(false);
+const alertType = ref('success');
 const router = useRouter();
-const showPassword = ref(false);
-const error = ref('');
-const { handleSubmit, isSubmitting } = useForm({
-  validationSchema: schema,
+const user = ref({
+  email: "",
+  password: ""
 });
 
-// Field definitions
-const { value: email } = useField('email');
-const { value: password } = useField('password');
-
-// GraphQL mutation for login
-const LOGIN_MUTATION = gql`
-  mutation MyMutation($email: String!, $password: String!) {
-    login(email: $email, password: $password) {
-      id
-      token
-      role
-    }
-  }
-`;
-
-const { mutate: login } = useMutation(LOGIN_MUTATION, {
-  context: {
-    headers: {
-      "Content-Type": "application/json",
-    },
-  },
+// Form validation schema (using Yup)
+const schema = yup.object({
+  email: yup
+    .string()
+    .email("Invalid email address")
+    .required("The email must not be empty"),
+  password: yup
+    .string()
+    .min(5, "The password must contain at least 5 characters")
+    .max(10, "The password can contain at most 10 characters")
+    .required("The password must not be empty")
 });
 
-// Login handler
-const onSubmit = handleSubmit(async (values) => {
+// Toggle password visibility
+const togglePassword = ref(false);
+const showPassword = () => {
+  togglePassword.value = !togglePassword.value;
+};
+
+const showAlert = (message, type = 'success') => {
+  alertMessage.value = message;
+  alertType.value = type;
+  alertVisible.value = true;
+  setTimeout(() => {
+    alertVisible.value = false;
+  }, 3000); // Adjusted timeout for better visibility
+};
+
+const { mutate: loginUser } = useMutation(LOGIN_MUTATION);
+
+// Error handling
+const { resetForm } = useForm();
+
+const onSubmit = async () => {
   try {
-    // Execute mutation
-    const { data } = await login({
-      email: values.email,
-      password: values.password,
+    const { data } = await loginUser({
+      email: user.value.email,
+      password: user.value.password,
     });
+    console.log(data);
 
-    if (!data || !data.login) {
-      throw new Error('Invalid response from server');
+    if (data && data.login && data.login.token) {
+      const token = data.login.token;
+      console.log(token);
+      localStorage.setItem('token', token);
+      const userId = getUserIdFromToken(token);
+      if (userId) {
+        localStorage.setItem('userId', userId);
+      } else {
+        console.log('Failed to decode user ID from token');
+      }
+
+      const redirectPath = localStorage.getItem('redirectAfterLogin');
+      if (redirectPath) {
+        // localStorage.removeItem('redirectAfterLogin');
+        router.push(redirectPath);
+      } else {
+        showAlert('You logged in successfully', 'success');
+        setTimeout(() => {
+          router.replace("/user");
+        }, 2000);
+      }
     }
-
-    const { token, role, id } = data.login;
-
-    // Set token and user in the auth store
-    authStore.setToken(token);
-    authStore.setUser({ user_id: id, role });
-
-    console.log('Login successful:', authStore.user);
-
-    // Redirect based on role
-    if (role === 'user') {
-      router.push('/');
-    } else if (role === 'admin') {
-      router.push('/dashboard'); // Adjust to your admin route
-    } else {
-      router.push('/auth/signup'); // Fallback route
-    }
-  } catch (err) {
-    error.value = err.graphQLErrors?.[0]?.message || 'An unexpected error occurred.';
-
+  } catch (error) {
+    showAlert("Login failed. Please check your credentials.", 'error');
   }
-});
-
+};
 </script>
 
-
-
 <template>
-  <div class="flex justify-center items-center min-h-screen bg-gradient-to-br from-blue-300 via-indigo-200 to-purple-300 p-4">
-    <div class="flex flex-col md:flex-row w-full max-w-4xl bg-gray-200 rounded-lg shadow-lg overflow-hidden">
-      <div class="w-full md:w-1/2 p-8">
-        <form @submit.prevent="onSubmit" class="space-y-6">
-          <h2 class="text-3xl font-bold text-center text-white">Login to Your Account</h2>
+  <div class="flex flex-col min-h-screen bg-gray-100 justify-center items-center">
+    <AlertMessage :message="alertMessage" :type="alertType" :visible="alertVisible" />
 
-          <div v-if="error" class="text-lg font-semibold text-center text-red-500">
-            {{ error }}
-          </div>
+    <Form @submit="onSubmit" :validation-schema="schema" class="flex flex-col justify-center items-center w-full max-w-md p-6 bg-white rounded-lg ">
+      <h1 class="font-bold text-2xl mb-4 text-gray-800">Login Page</h1>
 
-          <!-- Email input -->
-          <div class="relative">
-            <label for="email" class="block text-gray-600 text-sm font-bold mb-2">Email</label>
-            <input
-              v-model="email"
-              type="email"
-              placeholder="Enter your email"
-              class="w-full p-2 pl-3 border border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-800 text-white"
-            />
-            <ErrorMessage name="email" class="text-red-500 text-sm italic" />
-
-          </div>
-
-          <!-- Password input -->
-          <div class="relative">
-            <label for="password" class="block text-gray-600 text-sm font-bold mb-2">Password</label>
-            <input
-              :type="showPassword ? 'text' : 'password'"
-              v-model="password"
-              placeholder="Enter your password"
-              class="w-full p-2 pl-3 border border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-800 text-white"
-            />
-            <button type="button" @click="showPassword = !showPassword" class="absolute top-2 right-3 text-gray-500 hover:text-gray-700">
-              {{ showPassword ? 'Hide' : 'Show' }}
-            </button>
-            <span class="text-red-500"><ErrorMessage name="password" /></span>
-          </div>
-
-          <button
-            type="submit"
-            class="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg font-bold shadow-lg transform transition-all duration-300 hover:scale-105"
-          >
-            Log In
-          </button>
-
-          <div class="text-center mt-4 text-gray-700">
-            <nuxt-link to="#" class="text-blue-600 hover:text-blue-800 font-medium">Forgot your password? Reset here.</nuxt-link>
-          </div>
-
-          <div class="text-center mt-4 text-gray-700">
-            <nuxt-link to="/auth/signup" class="text-blue-600 hover:text-blue-800 font-medium">Don't have an account? Sign up here.</nuxt-link>
-          </div>
-        </form>
+      <div class="flex flex-col w-full mb-4">
+        <label class="font-semibold text-gray-600 mb-2">Email</label>
+        <Field 
+          type="email" 
+          name="email"
+          v-model="user.email" 
+          placeholder="Enter email" 
+          class="p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        />
+        <ErrorMessage name="email" class="text-red-500 text-sm" />
       </div>
 
-      <div class="w-full md:w-1/2 hidden md:flex items-center justify-center">
-        <img src="../../assets/css/image/logo.png" alt="Login Illustration" class="w-full h-full object-cover" />
+      <div class="flex flex-col w-full mb-6">
+        <label class="font-semibold text-gray-600 mb-2">Password</label>
+        <div class="flex flex-col relative">
+          <Field 
+            :type="togglePassword ? 'text' : 'password'"
+            name="password"
+            v-model="user.password" 
+            placeholder="Enter password" 
+            class="p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+          <ErrorMessage name="password" class="text-red-500 text-sm" />
+          <Eye class="absolute top-3 right-3 cursor-pointer" @click="showPassword" />
+        </div>
       </div>
-    </div>
+
+      <button 
+        type="submit" 
+        class="w-full py-2 px-4 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+      >
+        Login
+      </button>
+
+      <p class="font-semibold p-3 text-left">
+        Don't have an account?
+        <NuxtLink to="/auth/signup" class="text-blue-600">Sign Up</NuxtLink>
+      </p>
+    </Form>
   </div>
 </template>
-
-
-
-
