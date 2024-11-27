@@ -5,8 +5,8 @@ import { ref, watch, computed } from 'vue';
 import Avater from '../../assets/icons/Avater.vue';
 import Toogle from "../../assets/icons/Toogle.vue";
 import { useQuery } from "@vue/apollo-composable";
-import gql from 'graphql-tag';
-import {GET_USER_BY_HIS_ID} from "../../utils/queries"
+// import gql from 'graphql-tag';
+import {GET_USER_BY_HIS_ID} from "../../util/queries"
 import { useRouter } from 'vue-router';
 const router=useRouter()
 const onhover = ref(false);
@@ -47,7 +47,7 @@ const clickLogout=()=>{
   <div class="w-full bg-slate-700 shadow-md sticky top-0 z-50">
     <div class="flex justify-between items-center px-4 py-4 md:px-8">
       <NuxtLink to="/user" class="text-2xl font-bold text-white hover:bg-black">
-        MinabEvent
+        TestEvents
       </NuxtLink>
       <button
         @click="toggleMobileMenu"

@@ -54,15 +54,17 @@ export const upload_image_action = gql`
 
 
 export const insert_event = gql`
-   mutation Event(
+     mutation Event(
     $title: String!,
     $description: String!,
     $venue: String!,
     $address: String!,
-    $price: numeric!,
+    $price: String!,
+    $specific_Price : numeric! ,
     $categories: String!,
     $cover_photo: String!,
     $tags: [String!],
+    $date: date!
   
   ) {
     insert_events(
@@ -72,9 +74,11 @@ export const insert_event = gql`
         venue: $venue,
         address: $address,
         price: $price,
+        specific_Price: $specific_Price,
         categories: $categories,
         tags: $tags,
         cover_photo: $cover_photo,
+        date : $date
        
       }
     ) {
@@ -124,7 +128,8 @@ mutation EventUpdate(
     $description: String!,
     $venue: String!,
     $address: String!,
-    $price: numeric!,
+    $price: String,
+    $specificPrice: numeric,
     $categories: String!,
     $cover_photo: String!,
     $tags: [String!],
@@ -138,6 +143,7 @@ mutation EventUpdate(
         venue: $venue,
         address: $address,
         price: $price,
+        specific_Price: $specificPrice,
         categories: $categories,
         tags: $tags,
         cover_photo: $cover_photo,
@@ -153,6 +159,7 @@ mutation EventUpdate(
       tags
       categories
       location
+      specific_Price
       created_at
       updated_at
     }
@@ -164,7 +171,6 @@ export const GET_USER_BY_HIS_ID=gql`
 query{
   users{
     username
-    image
     events{
       id
       title
@@ -172,6 +178,7 @@ query{
       venue
       address
       price
+      specific_Price
       tags
       categories
       location
@@ -504,7 +511,6 @@ export const GET_USER_FOR_UPLOAD_PROFILE=gql`
 query{
   users{
     username
-    image
     email
   }
 
@@ -540,9 +546,9 @@ query{
     id
     amount
     checkout_url
-    phoneNumber
+    phonenumber
     event{
-      preparation_date
+      date
       
     }
     user{
