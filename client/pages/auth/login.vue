@@ -1,9 +1,14 @@
+
+
+
 <script setup>
 
 definePageMeta({
-  layout: "empty"
-  
+  middleware: "after-log"
 });
+
+
+
 import { Form, Field, ErrorMessage, useForm } from "vee-validate";
 import * as yup from 'yup'; 
 import { ref } from 'vue';
@@ -15,9 +20,6 @@ import { useRouter } from 'vue-router';
 import { getUserIdFromToken } from "../../util/util";
 import { LOGIN_MUTATION } from "../../util/queries";
 
-definePageMeta({
-  middleware: "after-log"
-});
 
 const alertMessage = ref('');
 const alertVisible = ref(false);

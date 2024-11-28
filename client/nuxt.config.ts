@@ -1,7 +1,4 @@
 import { defineNuxtConfig } from "nuxt/config";
-import path from "path";
-
-const __dirname = path.resolve();
 
 export default defineNuxtConfig({
   runtimeConfig: {
@@ -14,15 +11,10 @@ export default defineNuxtConfig({
   modules: [
     "@nuxtjs/apollo",
     "@nuxt/icon",
-    "@pinia/nuxt",
+    // "@pinia/nuxt",
     // "vuetify-nuxt-module",
     // "@vueuse/core",
   ],
-
-  imports: {
-    dirs: ["./stores"], // Automatically import stores
-    autoImport: true, // Automatically import Pinia composables
-  },
 
   devtools: { enabled: true },
 
@@ -40,8 +32,6 @@ export default defineNuxtConfig({
       autoprefixer: {},
     },
   },
-
-  plugins: ["@/plugins/auth.ts"],
 
   apollo: {
     clients: {
@@ -63,10 +53,6 @@ export default defineNuxtConfig({
         },
       },
     },
-  },
-
-  alias: {
-    "@": path.resolve(__dirname, "./"), // Resolve paths relative to __dirname
   },
 
   compatibilityDate: "2024-08-28",

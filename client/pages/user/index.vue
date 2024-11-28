@@ -1,8 +1,11 @@
 <script setup>
+
 definePageMeta({
-  layout: 'user',
-  middleware: "auth-log"
+  middleware: "auth-log",
+  layout:"user",
 });
+
+
 import { onMounted, ref } from 'vue';
 import { GET_USER_BY_HIS_ID, Update_Event_ById, DELETE_EVENT_BY_ID } from "../../util/queries";
 import { useQuery, useMutation } from '@vue/apollo-composable';
