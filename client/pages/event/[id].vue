@@ -219,37 +219,23 @@ onMounted(async () => {
 <template>
   <div class="container mx-auto mt-20 px-6">
     <div class="flex flex-col lg:flex-row gap-10">
-      <div class="lg:w-2/3 bg-white rounded-lg p-6">
+      <!-- Event Details Section -->
+      <div class="lg:w-2/3 bg-white rounded-lg p-6 shadow-lg">
         <AlertMessage :message="alertMessage" :type="alertType" :visible="alertVisible" />
-
         <div class="relative">
-       <v-carousel v-if="eventData?.imagestore && eventData?.imagestore.length > 0" :items-to-show="1" class="rounded-lg">
-     <v-carousel-item
-      v-for="(item, i) in eventData?.imagestore"
-       :key="i"
-         class="flex items-center justify-center"
-      >
-    <img
-      :src="item.url"
-      :alt="item.alt"
-      class="object-cover w-full h-72 rounded-lg"
-    />
-  </v-carousel-item>
-</v-carousel>
-<div v-else>
-  
-  <p>Loading images...</p>
-</div>
-
-          <Heart
-            @click="toggleBookmark"
-            :color="isBookmarked ? 'red' : 'orange'"
-            class="w-8 h-8 cursor-pointer absolute top-4 right-4 lg:top-6 lg:right-6"
-          />
+          <v-carousel v-if="eventData?.imagestore && eventData?.imagestore.length > 0" :items-to-show="1" class="rounded-lg">
+            <v-carousel-item v-for="(item, i) in eventData?.imagestore" :key="i" class="flex items-center justify-center">
+              <img :src="item.url" :alt="item.alt" class="object-cover w-full h-72 rounded-lg shadow-lg" />
+            </v-carousel-item>
+          </v-carousel>
+          <div v-else>
+            <p class="text-center text-gray-500">Loading images...</p>
+          </div>
+          <Heart @click="toggleBookmark" :color="isBookmarked ? 'red' : 'orange'" class="w-8 h-8 cursor-pointer absolute top-4 right-4 lg:top-6 lg:right-6" />
         </div>
 
         <div class="flex justify-between items-center mt-4">
-          <h1 class="text-3xl font-bold">{{ eventData?.title }}</h1>
+          <h1 class="text-3xl font-bold text-gray-900">{{ eventData?.title }}</h1>
         </div>
 
         <p class="text-gray-500 mt-2">{{ eventData?.date }}</p>
@@ -261,29 +247,30 @@ onMounted(async () => {
         <p class="text-gray-600">{{ eventData?.address }}</p>
       </div>
 
+      <!-- Ticket Reservation Section -->
       <div class="lg:w-1/3 flex flex-col gap-6">
-        <div class="bg-white shadow-lg rounded-lg p-6">
+        <div class="bg-white shadow-xl rounded-lg p-6">
           <h2 class="text-xl font-semibold mb-4">Reserve Your Tickets</h2>
 
           <div class="flex justify-between items-center mb-4">
-            <p class="text-lg">Number of Tickets</p>
+            <p class="text-lg text-gray-700">Number of Tickets</p>
             <div class="flex items-center gap-4">
-              <button @click="decreaseCount" class="bg-gray-200 p-2 rounded-lg">-</button>
-              <span class="text-lg">{{ count }}</span>
-              <button @click="increaseCount" class="bg-gray-200 p-2 rounded-lg">+</button>
+              <button @click="decreaseCount" class="bg-gray-200 p-2 rounded-lg hover:bg-gray-300 transition duration-300">-</button>
+              <span class="text-lg text-gray-700">{{ count }}</span>
+              <button @click="increaseCount" class="bg-gray-200 p-2 rounded-lg hover:bg-gray-300 transition duration-300">+</button>
             </div>
           </div>
 
           <div v-if="eventData?.price === 'paid'" class="mb-4">
-            <p class="text-lg font-bold">Total Price: ${{ totalPrice }}</p>
+            <p class="text-lg font-bold text-gray-700">Total Price: ${{ totalPrice }}</p>
           </div>
 
-            <button @click="reserveTicket" class="w-full mt-4 bg-indigo-500 text-white py-3 rounded-lg transition-transform hover:scale-105">
-             <span v-if="isTicket">Ticket Reserved</span>
+          <button @click="reserveTicket" class="w-full mt-4 bg-indigo-500 text-white py-3 rounded-lg transition-transform hover:scale-105 hover:bg-indigo-600">
+            <span v-if="isTicket">Ticket Reserved</span>
             <span v-else>Reserve Ticket</span>
           </button>
-           
-            <div v-if="showReservefor" class="fixed top-24 left-1/2 transform -translate-x-1/2 bg-orange-100 rounded-lg shadow-xl p-6 w-1/3 h-96 z-50">
+
+          <div v-if="showReservefor" class="fixed top-24 left-1/2 transform -translate-x-1/2 bg-orange-100 rounded-lg shadow-xl p-6 w-4/5 md:w-1/3 h-auto z-50">
             <h3 class="text-lg font-semibold mb-4 text-center">Complete Your Payment</h3>
             <div class="flex flex-col gap-4">
               <input
@@ -300,24 +287,51 @@ onMounted(async () => {
               />
               <p v-if="processPayment" class="self-center text-black">Paying...</p>
               <button
-              v-else
-                class="bg-green-500 text-white w-1/3 py-3 self-center rounded-lg transition-transform hover:scale-105 mt-4"
+                v-else
+                class="bg-green-500 text-white w-full py-3 rounded-lg transition-transform hover:scale-105 mt-4"
                 @click="makePayment"
               >
                 Pay
               </button>
-              <button @click="handleCancel" class="bg-slate-400 text-white w-1/3 py-3 self-center rounded-lg transition-transform hover:scale-105 mt-4">cancel</button>
+              <button @click="handleCancel" class="bg-slate-400 text-white w-full py-3 rounded-lg transition-transform hover:scale-105 mt-4">Cancel</button>
             </div>
-           
           </div>
         </div>
-        
+
         <!-- Map Section -->
-        <div class="bg-white shadow-lg rounded-lg p-6">
+        <div class="bg-white shadow-xl rounded-lg p-6">
           <h2 class="text-xl font-semibold mb-4">Event Location</h2>
-          <Map class="w-full h-72 rounded-lg shadow-sm"  :address="eventData?.address"/>
+          <Map class="w-full h-72 rounded-lg shadow-sm" :address="eventData?.address"/>
         </div>
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+/* Responsive Adjustments */
+@media (max-width: 1024px) {
+  .container {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .lg\:w-2\/3 {
+    width: 100%;
+  }
+
+  .lg\:w-1\/3 {
+    width: 100%;
+    margin-top: 24px;
+  }
+
+  .lg\:flex-row {
+    flex-direction: column;
+  }
+}
+
+/* Additional Styling for Cards */
+.bg-white {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+</style>

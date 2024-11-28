@@ -13,16 +13,16 @@ import { computed, onMounted } from 'vue';
 const router = useRouter();
 
 // Query
-const { result, loading, error,refetch } = useQuery(GET_ALL_EVENTS_WTHOUT_FILTER);
+const { result, loading, error, refetch } = useQuery(GET_ALL_EVENTS_WTHOUT_FILTER);
 
 // Cover images mapping
 const coverImages = {
-  Sport:sport,
+  Sport: sport,
   Entertainment: entertain,
-  health,
-  Food:food,
-  Tech:tech,
-  Education:education
+  Health: health,
+  Food: food,
+  Tech: tech,
+  Education: education
 };
 
 // Get cover image for a category
@@ -30,28 +30,27 @@ const getCoverImage = (category) => coverImages[category] || '';
 
 // Unique categories
 const uniqueCategories = computed(() => {
-  if(loading.value){
-   return []
-}else if(error.value){
-  return []
-}
-else{
-  const events = result.value?.events || [];
-  if (!events.length) return [];
-  return [
-    ...new Map(
-      events.map(event => [
-        event.category, 
-        { category: event.categories, coverImage: getCoverImage(event.categories) }
-      ])
-    ).values()
-  ];
-}
-  
+  if (loading.value) {
+    return [];
+  } else if (error.value) {
+    return [];
+  } else {
+    const events = result.value?.events || [];
+    if (!events.length) return [];
+    return [
+      ...new Map(
+        events.map(event => [
+          event.category,
+          { category: event.category, coverImage: getCoverImage(event.category) }
+        ])
+      ).values()
+    ];
+  }
 });
+
 const handleClickShow = (category, image) => {
   router.push({
-    path: '/catagoryDetail',
+    path: '/categoryDetail',
     query: {
       category,
       image
@@ -60,7 +59,7 @@ const handleClickShow = (category, image) => {
 };
 
 const fetchLatestEvents = async () => {
-  if (loading.value) return; 
+  if (loading.value) return;
   try {
     await refetch();
   } catch (err) {
@@ -73,29 +72,56 @@ onMounted(() => {
 });
 
 </script>
+
 <template>
-        <div >
-        <h1 class="font-bold text-3xl p-4">Explore Event By Category</h1>
-       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 p-4">
-         <h1 v-if="loading">Loading...</h1>
-        <h1 v-else-if="error">{{ error.message }}</h1>     
-        <div 
-        v-else 
-        v-for="event in uniqueCategories" 
-        :key="event.category"
-        class="cursor-pointer  rounded-lg border-2 hover:shadow-xl shadow-lg transition-shadow duration-300 ease-in-out overflow-hidden" 
-        @click="handleClickShow(event.category, event.coverImage)"
-      >
-        <img 
-          :src="event.coverImage" 
-          alt="No image available" 
-          class="w-full h-48 object-cover rounded-lg" 
-        />
-        <div class="p-4">
-          <h1 class="text-center text-lg font-semibold text-gray-800">{{ event.category }}</h1>
+  <div>
+    <h1 class="font-bold text-3xl p-4 text-center text-gray-800">Explore Events By Category</h1>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8 p-4">
+      <div v-if="loading" class="col-span-full text-center text-lg text-gray-600">Loading...</div>
+      <div v-else-if="error" class="col-span-full text-center text-lg text-red-600">{{ error.message }}</div>
+      
+      <div v-else
+           v-for="event in uniqueCategories"
+           :key="event.category"
+           class="cursor-pointer rounded-lg border-2 hover:shadow-xl shadow-lg transition-shadow duration-300 ease-in-out overflow-hidden"
+           @click="handleClickShow(event.category, event.coverImage)">
+        
+        <img :src="event.coverImage"
+             alt="Event Image"
+             class="w-full h-48 object-cover rounded-t-lg transition-transform duration-300 ease-in-out transform hover:scale-105" />
+        
+        <div class="p-4 bg-white rounded-b-lg text-center">
+          <h2 class="text-lg font-semibold text-gray-800">{{ event.category }}</h2>
         </div>
       </div>
     </div>
   </div>
 </template>
 
+<style scoped>
+/* Optional: Add shadows to enhance the visuals */
+.shadow-lg {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.shadow-xl {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .text-shadow-lg {
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+  }
+  h2 {
+    font-size: 1.25rem;
+  }
+}
+
+@media (max-width: 1024px) {
+  h2 {
+    font-size: 1.5rem;
+  }
+}
+</style>

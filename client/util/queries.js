@@ -45,8 +45,8 @@ query user ($id:Int!) {
 
 
 export const upload_image_action = gql`
-  mutation uploadImages($base64_str: String!) {
-    uploadImages(base64_str: $base64_str) {
+  mutation uploadBase64Image($base64_str: String!) {
+    uploadBase64Image(base64_str: $base64_str) {
       url
     }
   }
@@ -310,6 +310,7 @@ query getEventById($id:Int!){
     address
     venue
     price
+    location
     cover_photo
     date
     imagestore{

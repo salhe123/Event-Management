@@ -1,7 +1,9 @@
 <script setup>
-//  definePageMeta({
-//   middleware:"after-log"
-// })
+
+definePageMeta({
+  layout:"default"
+});
+
 import eventCatagory from "../components/homecomponents/eventCatagory.vue"
 import homecover from "../components/homecomponents/homecover.vue"
 import allLocation from "../components/homecomponents/allLocation.vue"
@@ -10,8 +12,9 @@ import allLocation from "../components/homecomponents/allLocation.vue"
 <template>
    <div class="bg-yellow-50">
        <homecover/>
+       <allLocation />  
        <eventCatagory/>  
-       <allLocation />   
+
         
    </div> 
 </template>
