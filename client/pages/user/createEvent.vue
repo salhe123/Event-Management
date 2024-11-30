@@ -1,6 +1,7 @@
 <script setup>
 definePageMeta({
-    middleware: "auth-log"
+    middleware: "auth-log",
+    layout : "empty"
 });
 
 import { ref } from 'vue';
@@ -47,7 +48,9 @@ const schema = Yup.object({
   specificPrice: Yup.number().optional(),
   date: Yup.string().required('Preparation date is required'),
   categories: Yup.string().oneOf(['Food', 'Tech', 'Education', 'Entertainment', 'Sport'], 'Invalid category'),
-  tags: Yup.string().transform(val => val.split(',').map(tag => tag.trim()))
+  tags: Yup.string()
+    .transform(val => val.split(',').map(tag => tag.replace(/"/g, '').trim())) // remove any quotes and trim spaces
+    .required('Tags are required')
 });
 
 const selectedImages = ref([]);
@@ -70,7 +73,6 @@ const showAlert = (message, type = 'success') => {
   }, 4000);
 };
 
-// Form submission logic
 const onSubmit = async (values) => {
   loading.value = true;
   try {
@@ -78,7 +80,10 @@ const onSubmit = async (values) => {
       showAlert('Please select images to upload.', 'error');
       return;
     }
-  
+
+    // Ensure tags are in array format before submitting
+    const tagsArray = values.tags.split(',').map(tag => tag.trim());
+
     const uploadPromises = selectedImages.value.map(async (file) => {
       const reader = new FileReader();
       const base64Promise = new Promise((resolve, reject) => {
@@ -110,13 +115,13 @@ const onSubmit = async (values) => {
       date: values.date,
       categories: values.categories,
       cover_photo: imageUrls.value[0],
-      tags: values.tags,
+      tags: tagsArray,  // Ensure tags are passed as an array
     });
 
     const eventId = ref(response.data.insert_events.returning[0].id);
     console.log(eventId);
-    
-    const imagePromises = imageUrls.value.map(url => 
+
+    const imagePromises = imageUrls.value.map(url =>
       insertImage({
         url: url,
         event_id: String(eventId.value)
@@ -137,6 +142,7 @@ const onSubmit = async (values) => {
     loading.value = false;
   }
 };
+
 </script>
 
 <template>
@@ -255,17 +261,18 @@ const onSubmit = async (values) => {
             <ErrorMessage name="categories" class="text-sm text-red-500 mt-1" />
           </div>
 
-          <div class="mb-4">
-            <label for="tags" class="block text-sm font-semibold text-gray-700">Tags (comma separated)</label>
-            <Field
-              v-model="formData.tags"
-              name="tags"
-              type="text"
-              placeholder="Enter event tags"
-              class="w-full px-4 py-2 mt-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            />
-            <ErrorMessage name="tags" class="text-sm text-red-500 mt-1" />
-          </div>
+          <div class="mb-6">
+        <label for="tags" class="block text-gray-700 text-sm font-bold mb-2">Tags</label>
+        <Field
+          v-model="formData.tags"
+          name="tags"
+          type="text"
+          placeholder="Comma-separated tags"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <ErrorMessage name="tags" class="text-red-500 text-sm"/>
+      </div>
+
         </div>
 
         <!-- Image Upload -->

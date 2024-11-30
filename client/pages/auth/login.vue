@@ -4,7 +4,8 @@
 <script setup>
 
 definePageMeta({
-  middleware: "after-log"
+  middleware: "after-log",
+  layout: "empty"
 });
 
 

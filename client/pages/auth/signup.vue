@@ -1,6 +1,7 @@
 <script setup>
 definePageMeta({
-  middleware: "after-log"
+  middleware: "after-log",
+  layout: "empty",
 });
 
 import { Form, Field, ErrorMessage, useForm } from "vee-validate";

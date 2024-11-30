@@ -22,9 +22,5 @@ import UserSidebar from "../components/userlayout/UserSidebar.vue";
         </main>
       </div>
     </div>
-
-    <footer class="w-full">
-      <Footer />
-    </footer>
   </div>
 </template>
